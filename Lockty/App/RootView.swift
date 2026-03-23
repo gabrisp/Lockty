@@ -19,8 +19,8 @@ struct RootView: View {
                 .toolbar(content: {
                     ToolbarItem(placement: .title) {
                         Text("hyt9johehje09hjeh9jh09ejhe9j0e")
-                            .font(.system(size: 50, weight: .semibold))
-                            .frame(height: 100)
+                            .font(.system(size: 40, weight: .semibold))
+                            .frame(height: 80)
                             .frame(maxWidth: .infinity)
                             .opacity(0)
                     }

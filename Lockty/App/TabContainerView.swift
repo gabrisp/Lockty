@@ -10,6 +10,8 @@ import SwiftUI
 struct TabContainerView: View {
     @Environment(AppRouter.self) var router
 
+    @State private var scrolledTab: AppRouter.Tab? = .modes
+
     var body: some View {
         @Bindable var router = router
 
@@ -30,13 +32,16 @@ struct TabContainerView: View {
                 }
                 .scrollTargetLayout()
             }
+            .scrollPosition(id: $scrolledTab)
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.paging)
             .scrollClipDisabled()
+            .onChange(of: scrolledTab) { _, tab in
+                if let tab { router.selectedTab = tab }
+            }
             .onChange(of: router.selectedTab) { _, tab in
-                withAnimation(.snappy) {
-                    proxy.scrollTo(tab, anchor: .leading)
-                }
+                guard tab != scrolledTab else { return }
+                withAnimation(.snappy) { proxy.scrollTo(tab, anchor: .leading) }
             }
         }
     }
