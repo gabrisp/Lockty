@@ -63,9 +63,8 @@ struct AvatarView: View {
             }
         }
         .frame(width: size.diameter, height: size.diameter)
-        .padding(size == .toolbar ? 0 : BaseTheme.Spacing.sm)
-        .locktyGlass(
-            size == .toolbar ? .regular : .regular.interactive(),
+        .padding(size == .toolbar ? BaseTheme.Spacing.xs : BaseTheme.Spacing.sm)
+        .locktyGlass(.regular.interactive(),
             in: .circle
         )
     }

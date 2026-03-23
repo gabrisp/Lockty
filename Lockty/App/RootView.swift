@@ -18,7 +18,10 @@ struct RootView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar(content: {
                     ToolbarItem(placement: .title) {
-                        Text("hyte")
+                        Text("hyt9johehje09hjeh9jh09ejhe9j0e")
+                            .font(.system(size: 50, weight: .semibold))
+                            .frame(height: 100)
+                            .frame(maxWidth: .infinity)
                             .opacity(0)
                     }
                 })
@@ -37,7 +40,7 @@ struct RootView: View {
             LocktyToolbar(selectedTab: $router.selectedTab, user: .preview) {
                 router.openSettings()
             }
-            .frame(height: 60)
+            .frame(height: 46)
         }
 
         .sheet(item: Binding(
@@ -50,4 +53,9 @@ struct RootView: View {
             .environment(router)
         }
     }
+}
+
+#Preview {
+    RootView()
+        .environment(AppRouter())
 }

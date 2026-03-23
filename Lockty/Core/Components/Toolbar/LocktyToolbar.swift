@@ -30,7 +30,13 @@ struct LocktyToolbar: View {
 
             AvatarView(name: user.displayName, size: .toolbar, action: onAvatarTap)
         }
-        .frame(height: 34)
+        .frame(height: 46)
         .padding(.horizontal, BaseTheme.Spacing.lg)
     }
+}
+
+#Preview {
+    @Previewable @State var selectedTab: AppRouter.Tab = .modes
+    LocktyToolbar(selectedTab: $selectedTab, user: .preview) {}
+        .locktyPageBackground()
 }
