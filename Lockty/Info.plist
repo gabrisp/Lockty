@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Privacy - Location When In Use Usage Description
+Privacy</key>
+	<string>Lockty uses your location to trigger focus modes automatically.</string>
+	<key>Privacy - NFC Scan Usage Description  
+</key>
+	<string>Lockty uses NFC tags to activate and deactivate focus modes.</string>
+	<key>Privacy - Screen Time Usage Description
+</key>
+	<string>Lockty uses Screen Time to block distracting apps during focus modes.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>location</string>
+		<string>fetch</string>
+	</array>
+</dict>
+</plist>
