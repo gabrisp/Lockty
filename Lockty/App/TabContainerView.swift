@@ -9,13 +9,17 @@ import SwiftUI
 
 struct TabContainerView: View {
     @Environment(AppRouter.self) var router
-
-    @State private var scrolledTab: AppRouter.Tab? = .modes
-
+    @State private var tabProgress: CGFloat = 0
+    
     var body: some View {
+        
         @Bindable var router = router
+    
+     
 
-        ScrollViewReader { proxy in
+        GeometryReader {
+            let size = $0.size
+
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 0) {
                     ModesView()
@@ -31,18 +35,25 @@ struct TabContainerView: View {
                         .containerRelativeFrame(.horizontal)
                 }
                 .scrollTargetLayout()
-            }
-            .scrollPosition(id: $scrolledTab)
-            .scrollIndicators(.hidden)
-            .scrollTargetBehavior(.paging)
-            .scrollClipDisabled()
-            .onChange(of: scrolledTab) { _, tab in
-                if let tab { router.selectedTab = tab }
-            }
-            .onChange(of: router.selectedTab) { _, tab in
-                guard tab != scrolledTab else { return }
-                withAnimation(.snappy) { proxy.scrollTo(tab, anchor: .leading) }
+                .offsetX { value in
+                    /// Converting Offset into Progress
+                    let progress = -value / (size.width * CGFloat(AppRouter.Tab.allCases.count - 1))
+                    /// Capping Progress BTW 0-1
+                    tabProgress = max(min(progress, 1), 0)
+                }
             }
         }
-    }
+        .scrollPosition(id: Binding(
+        get: {
+            router.selectedTab
+        },
+        set: { if let tab = $0 {
+                router.selectedTab = tab
+            }
+        }))
+        .scrollIndicators(.hidden)
+        .scrollTargetBehavior(.paging)
+        .scrollClipDisabled()
+        }
+    
 }

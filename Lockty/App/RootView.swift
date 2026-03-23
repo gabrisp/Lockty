@@ -20,7 +20,7 @@ struct RootView: View {
                     ToolbarItem(placement: .title) {
                         Text("hyt9johehje09hjeh9jh09ejhe9j0e")
                             .font(.system(size: 40, weight: .semibold))
-                            .frame(height: 80)
+                            .frame(height: 100)
                             .frame(maxWidth: .infinity)
                             .opacity(0)
                     }
