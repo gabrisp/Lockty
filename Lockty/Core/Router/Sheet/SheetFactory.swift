@@ -31,7 +31,15 @@ struct SheetFactory {
         case .addFriend:
             AnyView(Text("Add Friend"))
         case .settings:
-            AnyView(Text("Settings"))
+            AnyView(SettingsView(user: .preview))
+        case .statFocusDetail:
+            AnyView(Text("Focus Detail").font(Typography.title()))
+        case .statTimeline:
+            AnyView(Text("Timeline").font(Typography.title()))
+        case .statWeekChart:
+            AnyView(Text("Week Chart").font(Typography.title()))
+        case .statMostResisted:
+            AnyView(Text("Most Resisted").font(Typography.title()))
         }
     }
 }

@@ -52,6 +52,18 @@ struct TappableModifier: ViewModifier {
 
 
 
+// MARK: - Namespace environment key (for zoom transitions)
+private struct ModeZoomNamespaceKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+
+extension EnvironmentValues {
+    var modeZoomNamespace: Namespace.ID? {
+        get { self[ModeZoomNamespaceKey.self] }
+        set { self[ModeZoomNamespaceKey.self] = newValue }
+    }
+}
+
 // MARK: - Extensions — uso limpio en views
 extension View {
     func locktyCard() -> some View {
@@ -71,5 +83,14 @@ extension View {
     }
     func tappable() -> some View {
         modifier(TappableModifier())
+    }
+
+    @ViewBuilder
+    func ifLet<T, V: View>(_ value: T?, transform: (Self, T) -> V) -> some View {
+        if let value {
+            transform(self, value)
+        } else {
+            self
+        }
     }
 }

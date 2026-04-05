@@ -27,10 +27,13 @@ extension Color {
         )
     }
 
-    // MARK: - Semantic backgrounds (grouped)
-    static var pageBackground: Color      { Color(.systemBackground) }
-    static var cardBackground: Color      { Color(.secondarySystemBackground) }
-    static var innerBackground: Color     { Color(.tertiarySystemBackground) }
+    // MARK: - Semantic backgrounds (grouped hierarchy)
+    // Página:        secondarySystemGroupedBackground  (blanco en light)
+    // Card outer:    systemGroupedBackground           (gris en light)
+    // Card inner:    secondarySystemGroupedBackground  (blanco en light)
+    static var pageBackground: Color      { Color(.secondarySystemGroupedBackground) }
+    static var cardBackground: Color      { Color(.systemGroupedBackground) }
+    static var innerBackground: Color     { Color(.secondarySystemGroupedBackground) }
 
     // MARK: - Avatar gradient
     static func avatarGradient(for name: String) -> LinearGradient {

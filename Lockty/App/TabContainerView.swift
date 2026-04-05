@@ -25,14 +25,17 @@ struct TabContainerView: View {
                     ModesView()
                         .id(AppRouter.Tab.modes)
                         .containerRelativeFrame(.horizontal)
+                        .environment(router)
 
                     StatsView()
                         .id(AppRouter.Tab.stats)
                         .containerRelativeFrame(.horizontal)
+                        .environment(router)
 
                     SocialView()
                         .id(AppRouter.Tab.social)
                         .containerRelativeFrame(.horizontal)
+                        .environment(router)
                 }
                 .scrollTargetLayout()
                 .offsetX { value in

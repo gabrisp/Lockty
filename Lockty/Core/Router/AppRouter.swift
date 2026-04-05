@@ -13,6 +13,7 @@ final class AppRouter {
     // MARK: - Routers
     var navigation = NavigationRouter()
     var sheet = SheetRouter()
+    var settings = SettingsRouter()
 
     // MARK: - Tab activo
     var selectedTab: Tab = .modes
@@ -36,22 +37,24 @@ final class AppRouter {
     }
 
     // MARK: - Navegación
-    func openMode(_ id: UUID) {
-        navigation.push(.modeDetail(modeId: id))
+    func editMode(_ mode: Mode) {
+        sheet.push(.editMode(modeId: mode.id))
     }
 
-    func editMode(_ id: UUID) {
-        navigation.push(.modeDetail(modeId: id))
-        sheet.push(.editMode(modeId: id))
-    }
-
-    func openSettings() {
+    func openSettings(_ destination: SettingsDestination? = nil) {
         sheet.push(.settings)
+        if let destination { settings.push(destination) }
     }
 
     func openAddFriend() {
         sheet.push(.addFriend)
     }
+
+    // MARK: - Stats sheets
+    func openStatFocusDetail(date: Date) { sheet.push(.statFocusDetail(date: date)) }
+    func openStatTimeline(date: Date)    { sheet.push(.statTimeline(date: date)) }
+    func openStatWeekChart()             { sheet.push(.statWeekChart) }
+    func openStatMostResisted()          { sheet.push(.statMostResisted) }
 
     // MARK: - Premium
     func requirePro(_ feature: ProFeature, action: () -> Void) {

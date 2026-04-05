@@ -18,7 +18,7 @@ struct AIBadge: View {
                 .font(Typography.caption(weight: .semibold))
                 .foregroundStyle(Color(.label))
                 .frame(width: 64, height: 32)
-                .background(.white)
+                .background(Color.innerBackground)
                 .clipShape(Capsule())
                 .background(
                     Capsule()

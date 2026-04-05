@@ -41,5 +41,15 @@ enum Sheet: Identifiable, Hashable {
     /// Sheet de settings — perfil, social, devices, legal
     case settings
 
+    // MARK: Stats detail sheets
+    /// Detalle de focus time — sesiones del día seleccionado
+    case statFocusDetail(date: Date)
+    /// Detalle del timeline de un día — sesiones completas
+    case statTimeline(date: Date)
+    /// Detalle del chart semanal — comparativa detallada
+    case statWeekChart
+    /// Detalle de apps más resistidas — lista completa
+    case statMostResisted
+
     var id: String { "\(self)" }
 }

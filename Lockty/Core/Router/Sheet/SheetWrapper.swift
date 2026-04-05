@@ -23,7 +23,6 @@ struct SheetWrapper: View {
             content()
         }
         .presentationBackground(Color.pageBackground)
-        .presentationDragIndicator(.visible)
         .presentationCornerRadius(BaseTheme.Radius.xl)
         .sheet(item: Binding(
             get: { router.sheet.nextSheet(after: currentSheet) },
