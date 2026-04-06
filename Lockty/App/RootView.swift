@@ -15,38 +15,43 @@ struct RootView: View {
         @Bindable var router = router
 
         NavigationStack(path: $router.navigation.path) {
-            TabContainerView()
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .title) {
-                        Text("hyt9johehje09hjeh9jh09ejhe9j0e")
-                            .font(.system(size: 40, weight: .semibold))
-                            .frame(height: 60)
-                            .frame(maxWidth: .infinity)
-                            .opacity(0)
+            ZStack {
+                TabContainerView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .title) {
+                            Text("hyt9johehje09hjeh9jh09ejhe9j0e")
+                                .font(.system(size: 40, weight: .semibold))
+                                .frame(height: 60)
+                                .frame(maxWidth: .infinity)
+                                .opacity(0)
+                        }
                     }
-                }
-                .navigationDestination(for: NavigationDestination.self) { dest in
-                    switch dest {
-                    case .sessionDetail(let id):
-                        Text("Session Detail \(id)")
-                    case .allSessions(let id):
-                        Text("All Sessions \(String(describing: id))")
-                    case .modeDetail(let mode):
-                        ModeDetailView(mode: mode)
-                            .environment(router)
-                            .navigationTransition(.zoom(sourceID: mode.id, in: modeZoom))
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
-                }
-                .environment(\.modeZoomNamespace, modeZoom)
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            LocktyToolbar(selectedTab: $router.selectedTab, user: .preview) {
-                router.openSettings()
+                 
+
             }
-            .frame(height: 46)
+            .navigationDestination(for: NavigationDestination.self) { dest in
+                switch dest {
+                case .sessionDetail(let id):
+                    Text("Session Detail \(id)")
+                case .allSessions(let id):
+                    Text("All Sessions \(String(describing: id))")
+                case .modeDetail(let mode):
+                    ModeDetailView(mode: mode)
+                        .environment(router)
+                        .navigationTransition(.zoom(sourceID: mode.id, in: modeZoom))
+                }
+            }
+            .environment(\.modeZoomNamespace, modeZoom)
         }
+        .safeAreaInset(edge: .top, content: {
+            if router.navigation.path.isEmpty {
+                LocktyToolbar(selectedTab: $router.selectedTab, user: .preview) {
+                    router.openSettings()
+                }
+                .transition(.blurReplace)
+            }
+        })
         .sheet(item: Binding(
             get: { router.sheet.stack.first },
             set: { if $0 == nil { router.sheet.popToRoot() } }

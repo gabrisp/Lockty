@@ -45,15 +45,14 @@ struct ModesView: View {
                                 icon: mode.iconName,
                                 colorHex: mode.colorHex,
                                 subtitle: "2 apps"
-                            )
+                            ) {
+                                router.navigation.push(.modeDetail(mode: mode))
+                            }
                             .ifLet(zoomNamespace) { view, ns in
                                 view.matchedTransitionSource(id: mode.id, in: ns) {
                                     $0.background(.clear)
                                         .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
                                 }
-                            }
-                            .onTapGesture {
-                                router.navigation.push(.modeDetail(mode: mode))
                             }
                         }
 

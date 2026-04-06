@@ -12,6 +12,7 @@ struct ModeDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var vm: ModeDetailViewModel
     @State private var isPresented = false
+    @State private var dragOffset: CGFloat = 0
 
     init(mode: Mode) {
         _vm = State(initialValue: ModeDetailViewModel(mode: mode))
@@ -51,7 +52,29 @@ struct ModeDetailView: View {
             .padding(.bottom, 100)
         }
         .scrollIndicators(.hidden)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: { router.navigation.pop() }) {
+                    Image(systemName: "xmark")
+                        .font(Typography.body(weight: .semibold))
+                }
+            }
+        }
         .background(Color.pageBackground.ignoresSafeArea())
+        .offset(y: max(dragOffset, 0))
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    dragOffset = value.translation.height
+                }
+                .onEnded { value in
+                    if value.translation.height > 100 || value.predictedEndTranslation.height > 220 {
+                        router.navigation.pop()
+                    } else {
+                        withAnimation(.spring(duration: 0.3)) { dragOffset = 0 }
+                    }
+                }
+        )
         .onAppear { withAnimation(.spring(duration: 0.35)) { isPresented = true } }
     }
 
@@ -59,19 +82,6 @@ struct ModeDetailView: View {
 
     private var hero: some View {
         ZStack(alignment: .topLeading) {
-            // Dismiss button — top left
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.down")
-                    .font(Typography.body(weight: .semibold))
-                    .foregroundStyle(Color(.secondaryLabel))
-                    .frame(width: BaseTheme.Spacing.xxl * 1.5, height: BaseTheme.Spacing.xxl * 1.5)
-                    .background(Color.cardBackground)
-                    .clipShape(Circle())
-            }
-            .buttonStyle(NoFlashButtonStyle())
-
             // Centered icon + name
             VStack(spacing: BaseTheme.Spacing.sm) {
                 RoundedRectangle(cornerRadius: BaseTheme.Radius.card)

@@ -14,17 +14,23 @@ final class NavigationRouter {
 
     /// Navega a una pantalla nueva
     func push(_ destination: NavigationDestination) {
-        path.append(destination)
+        withAnimation(.easeInOut(duration: 0.3)) {
+            path.append(destination)
+        }
     }
 
     /// Vuelve a la pantalla anterior
     func pop() {
         guard !path.isEmpty else { return }
-        path.removeLast()
+        withAnimation(.easeInOut(duration: 0.3)) {
+            path.removeLast()
+        }
     }
 
     /// Vuelve al root del tab
     func popToRoot() {
-        path.removeLast(path.count)
+        withAnimation(.easeInOut(duration: 0.3)) {
+            path.removeLast(path.count)
+        }
     }
 }
