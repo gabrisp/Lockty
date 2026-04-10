@@ -69,6 +69,7 @@ struct ModesView: View {
             .padding(.top, BaseTheme.Spacing.md)
             .padding(.bottom, 100)
         }
+        .scrollEdgeEffectStyle(.hard, for: .all)
         .scrollIndicators(.hidden)
     }
 }

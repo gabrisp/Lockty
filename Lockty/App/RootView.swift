@@ -18,15 +18,7 @@ struct RootView: View {
             ZStack {
                 TabContainerView()
                     .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .title) {
-                            Text("hyt9johehje09hjeh9jh09ejhe9j0e")
-                                .font(.system(size: 40, weight: .semibold))
-                                .frame(height: 60)
-                                .frame(maxWidth: .infinity)
-                                .opacity(0)
-                        }
-                    }
+                 
                  
 
             }
