@@ -10,6 +10,16 @@ import SwiftUI
 @Observable
 final class AppRouter {
 
+    // MARK: - Auth
+    var authState: AuthState = .loading
+    var currentUser: LocalUser? = nil
+
+    enum AuthState {
+        case loading
+        case onboarding
+        case authenticated
+    }
+
     // MARK: - Routers
     var navigation = NavigationRouter()
     var sheet = SheetRouter()
@@ -25,13 +35,15 @@ final class AppRouter {
     enum Tab: String, CaseIterable, Hashable {
         case modes
         case stats
-        case social
+        case profile
+        // case social  // comentado hasta activar el social
 
         var label: String {
             switch self {
-            case .modes:  return "Modes"
-            case .stats:  return "Stats"
-            case .social: return "Social"
+            case .modes:   return "Modos"
+            case .stats:   return "Stats"
+            case .profile: return "Perfil"
+            // case .social: return "Social"
             }
         }
     }

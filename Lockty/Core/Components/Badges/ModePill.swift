@@ -33,7 +33,7 @@ struct ModePill: View {
         ModePill(mode: .preview)
         ModePill(mode: Mode(
             id: UUID(), name: "Study", iconName: "book.fill",
-            colorHex: "#E3ECF8", state: .inactive, createdAt: .now
+            colorHex: "#E3ECF8", state: ModeState.inactive.rawValue, createdAt: .now
         ), action: {print("gol")})
     }
     .padding()

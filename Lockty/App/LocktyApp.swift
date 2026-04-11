@@ -6,13 +6,24 @@
 //
 
 import SwiftUI
+import FirebaseCore
+import RevenueCat
 
 @main
 struct LocktyApp: App {
     @State private var router = AppRouter()
+
+    init() {
+        FirebaseApp.configure()
+        Purchases.configure(withAPIKey: "test_ktzhLaELUjtxuPbCChwNtSxZyUR")
+        #if DEBUG
+        Purchases.logLevel = .debug
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootView()
+            AppEntryView()
                 .environment(router)
         }
     }

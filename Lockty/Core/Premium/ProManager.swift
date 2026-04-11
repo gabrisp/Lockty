@@ -6,12 +6,20 @@
 //
 
 import SwiftUI
+import RevenueCat
 
 @Observable
 final class PremiumManager {
     static let shared = PremiumManager()
 
-    var isPro: Bool = false  // Fase 1: siempre false. Fase 3: conectar con StoreKit
+    var isPro: Bool = false
+
+    func refresh() async {
+        guard let info = try? await Purchases.shared.customerInfo() else { return }
+        await MainActor.run {
+            isPro = info.entitlements["Lockty Unlimited"]?.isActive == true
+        }
+    }
 
     // MARK: - Feature gates
     func isUnlocked(_ feature: ProFeature) -> Bool {
@@ -28,7 +36,7 @@ final class PremiumManager {
     }
 
     // MARK: - Límites free
-    var maxModesFree: Int { 2 }
+    var maxModesFree: Int { 1 }
 
     func canCreateMode(currentCount: Int) -> Bool {
         isPro || currentCount < maxModesFree

@@ -7,7 +7,16 @@
 
 import Foundation
 
+// MARK: - Local user (persisted via CoreData)
 
+struct LocalUser: Identifiable, Hashable, Codable {
+    let id: UUID
+    var displayName: String
+    var createdAt: Date
+    var firebaseUserId: String
+}
+
+// MARK: - Remote/social models (sin persistencia local aún)
 
 struct User: Identifiable, Hashable {
     let id: UUID
@@ -33,8 +42,8 @@ struct Friendship: Identifiable, Hashable {
 
 struct FriendPermission: Identifiable, Hashable {
     let id: UUID
-    var fromUserId: UUID        // tú
-    var toUserId: UUID          // tu amigo
+    var fromUserId: UUID
+    var toUserId: UUID
     var modeId: UUID
     var modeName: String
     var modeColorHex: String
@@ -42,12 +51,10 @@ struct FriendPermission: Identifiable, Hashable {
     var permissionType: PermissionType
 }
 
-
-
 struct FriendAction: Identifiable, Hashable {
     let id: UUID
-    var fromUser: User          // quien SOLICITA — siempre tú
-    var toUserId: UUID          // quien ejecuta — tu amigo
+    var fromUser: User
+    var toUserId: UUID
     var modeId: UUID
     var modeName: String
     var action: FriendActionType
@@ -57,16 +64,16 @@ struct FriendAction: Identifiable, Hashable {
     var acceptedAt: Date?
 
     enum FriendActionType: String, Codable {
-        case block              // tú pides que te bloqueen
-        case requestBreak       // tú pides un break
-        case stopBreak          // tú pides parar el break
+        case block
+        case requestBreak
+        case stopBreak
     }
 
     enum FriendActionStatus: String, Codable {
-        case pendingAcceptance  // esperando que el amigo acepte
-        case accepted           // amigo aceptó, acción ejecutada
-        case declined           // amigo rechazó
-        case expired            // nadie respondió en tiempo
-        case cancelled          // tú lo cancelaste
+        case pendingAcceptance
+        case accepted
+        case declined
+        case expired
+        case cancelled
     }
 }

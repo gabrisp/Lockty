@@ -52,6 +52,41 @@ struct TappableModifier: ViewModifier {
 
 
 
+// MARK: - Onboarding hide preference keys
+
+struct OnboardingHideBarKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+struct OnboardingHideCTAKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+struct OnboardingCTALabelKey: PreferenceKey {
+    static let defaultValue: String? = nil
+    static func reduce(value: inout String?, nextValue: () -> String?) {
+        value = value ?? nextValue()
+    }
+}
+
+struct OnboardingBackAction: Equatable {
+    let action: () -> Void
+    static func == (lhs: Self, rhs: Self) -> Bool { false }
+}
+
+struct OnboardingBackOverrideKey: PreferenceKey {
+    static let defaultValue: OnboardingBackAction? = nil
+    static func reduce(value: inout OnboardingBackAction?, nextValue: () -> OnboardingBackAction?) {
+        value = value ?? nextValue()
+    }
+}
+
 // MARK: - Namespace environment key (for zoom transitions)
 private struct ModeZoomNamespaceKey: EnvironmentKey {
     static let defaultValue: Namespace.ID? = nil
@@ -83,6 +118,26 @@ extension View {
     }
     func tappable() -> some View {
         modifier(TappableModifier())
+    }
+
+    /// Oculta la barra de progreso del onboarding en este step.
+    func hideOnboardingBar(_ hide: Bool = true) -> some View {
+        preference(key: OnboardingHideBarKey.self, value: hide)
+    }
+
+    /// Oculta el botón CTA del onboarding en este step.
+    func hideOnboardingButton(_ hide: Bool = true) -> some View {
+        preference(key: OnboardingHideCTAKey.self, value: hide)
+    }
+
+    /// Personaliza el label del botón CTA del onboarding en este step.
+    func onboardingButtonLabel(_ label: String) -> some View {
+        preference(key: OnboardingCTALabelKey.self, value: label)
+    }
+
+    /// Override de la acción del botón de back del onboarding en este step.
+    func onboardingBackButtonOverride(_ action: @escaping () -> Void) -> some View {
+        preference(key: OnboardingBackOverrideKey.self, value: OnboardingBackAction(action: action))
     }
 
     @ViewBuilder

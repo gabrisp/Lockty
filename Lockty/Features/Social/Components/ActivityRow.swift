@@ -26,8 +26,7 @@ struct ActivityRow: View {
 
                     VStack(alignment: .leading, spacing: BaseTheme.Spacing.xs - 2) {
                         // "Name  verb"
-                        (Text(event.actorName).fontWeight(.bold)
-                        + Text("  \(event.description)"))
+                        Text("\(Text(event.actorName).fontWeight(.bold))  \(event.description)")
                             .font(Typography.body(weight: .regular))
                             .foregroundStyle(Color(.label))
                             .lineLimit(1)

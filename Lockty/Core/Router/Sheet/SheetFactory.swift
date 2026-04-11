@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import RevenueCatUI
 
 struct SheetFactory {
-    static func view(for sheet: Sheet) -> AnyView {
+    static func view(for sheet: Sheet, user: LocalUser?) -> AnyView {
         switch sheet {
         case .editMode(let id):
             AnyView(Text("Edit Mode \(id)"))
@@ -26,12 +27,24 @@ struct SheetFactory {
             AnyView(Text("Streak Heatmap"))
         case .modeFlow(let id):
             AnyView(Text("Mode Flow \(id)"))
-        case .premium(let reason):
-            AnyView(Text("Premium - \(reason.title)"))
+        case .premium:
+            AnyView(
+                PaywallView(displayCloseButton: true)
+                    .onPurchaseCompleted { _ in
+                        Task { await PremiumManager.shared.refresh() }
+                    }
+                    .onRestoreCompleted { _ in
+                        Task { await PremiumManager.shared.refresh() }
+                    }
+            )
         case .addFriend:
             AnyView(Text("Add Friend"))
         case .settings:
-            AnyView(SettingsView(user: .preview))
+            if let user {
+                AnyView(SettingsView(user: user))
+            } else {
+                AnyView(SettingsView(user: .preview))
+            }
         case .statFocusDetail:
             AnyView(Text("Focus Detail").font(Typography.title()))
         case .statTimeline:

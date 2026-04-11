@@ -7,25 +7,20 @@
 
 import Foundation
 
-struct Session: Identifiable, Hashable {
+struct Session: Identifiable, Hashable, Codable {
     let id: UUID
-    var modeId: UUID
-    var modeName: String
-    var modeColorHex: String
+    var modeId: UUID?
     var startedAt: Date
     var endedAt: Date?
-    var startTrigger: TriggerSource
-    var endTrigger: TriggerSource?
-    var startRuleId: UUID?
-    var endRuleId: UUID?
-    var totalBreakTime: TimeInterval
+    var startTrigger: String    // TriggerSource.rawValue
+    var endTrigger: String?
+    var totalBreakTime: Int     // segundos
     var blockedCount: Int
+    var payload: Data           // JSON snapshot del modo+rules en el momento
 
     var duration: TimeInterval {
-        guard let end = endedAt else {
-            return Date.now.timeIntervalSince(startedAt) - totalBreakTime
-        }
-        return end.timeIntervalSince(startedAt) - totalBreakTime
+        let end = endedAt ?? .now
+        return end.timeIntervalSince(startedAt) - TimeInterval(totalBreakTime)
     }
 
     var isActive: Bool { endedAt == nil }
@@ -45,9 +40,7 @@ struct SessionBreak: Identifiable, Hashable {
     var wasForced: Bool
 
     var duration: TimeInterval {
-        guard let end = endedAt else {
-            return Date.now.timeIntervalSince(startedAt)
-        }
+        guard let end = endedAt else { return Date.now.timeIntervalSince(startedAt) }
         return end.timeIntervalSince(startedAt)
     }
 

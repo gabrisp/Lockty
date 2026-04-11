@@ -62,30 +62,30 @@ enum PermissionType: String, Codable {
 
 // MARK: - Models
 
-struct Mode: Identifiable, Hashable {
+struct Mode: Identifiable, Hashable, Codable {
     let id: UUID
     var name: String
     var iconName: String
     var colorHex: String
-    var state: ModeState
+    var state: String   // ModeState.rawValue
     var createdAt: Date
 }
 
-struct Rule: Identifiable, Hashable {
+struct Rule: Identifiable, Hashable, Codable {
     let id: UUID
     var modeId: UUID
-    var transition: Transition
-    var conditionType: ConditionType
+    var transition: String      // Transition.rawValue
+    var conditionType: String   // ConditionType.rawValue
     var conditionConfig: Data
-    var guardLogic: GuardLogic
-    var onGuardFail: GuardFailBehavior
+    var guardLogic: String      // GuardLogic.rawValue
+    var onGuardFail: String     // GuardFailBehavior.rawValue
     var isActive: Bool
 }
 
-struct RuleGuard: Identifiable, Hashable {
+struct RuleGuard: Identifiable, Hashable, Codable {
     let id: UUID
     var ruleId: UUID
-    var type: GuardType
+    var type: String    // GuardType.rawValue
     var config: Data
 }
 

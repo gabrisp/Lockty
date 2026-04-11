@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import VariableBlur
 
 struct ModeDetailView: View {
     @Environment(AppRouter.self) private var router
@@ -19,48 +20,66 @@ struct ModeDetailView: View {
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(spacing: BaseTheme.Spacing.lg) {
+        ZStack(alignment: .top) {
+            ScrollView(.vertical) {
+                VStack(spacing: BaseTheme.Spacing.lg) {
 
-                // MARK: Hero — icon + name + dismiss
-                hero
+                    // MARK: Hero — icon + name
+                    hero
+                        .padding(.horizontal, BaseTheme.Spacing.lg)
+
+                    // MARK: Segmented control (native)
+                    Picker("", selection: $vm.selectedTab) {
+                        ForEach(ModeDetailViewModel.ModeDetailTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                     .padding(.horizontal, BaseTheme.Spacing.lg)
 
-                // MARK: Segmented control (native)
-                Picker("", selection: $vm.selectedTab) {
-                    ForEach(ModeDetailViewModel.ModeDetailTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
+                    // MARK: Tab content
+                    switch vm.selectedTab {
+                    case .overview:
+                        overviewContent
+                    case .stats:
+                        Text("Stats coming soon")
+                            .font(Typography.caption())
+                            .foregroundStyle(Color(.secondaryLabel))
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, BaseTheme.Spacing.xxl)
+                            .padding(.horizontal, BaseTheme.Spacing.lg)
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, BaseTheme.Spacing.lg)
+                .padding(.top, 54 + BaseTheme.Spacing.md)
+                .padding(.bottom, 100)
+            }
+            .scrollIndicators(.hidden)
+            .background(Color.pageBackground.ignoresSafeArea())
 
-                // MARK: Tab content
-                switch vm.selectedTab {
-                case .overview:
-                    overviewContent
-                case .stats:
-                    Text("Stats coming soon")
-                        .font(Typography.caption())
-                        .foregroundStyle(Color(.secondaryLabel))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, BaseTheme.Spacing.xxl)
-                        .padding(.horizontal, BaseTheme.Spacing.lg)
-                }
+            // Blur overlay
+            GeometryReader { geo in
+                VariableBlurView(maxBlurRadius: 16, direction: .blurredTopClearBottom)
+                    .frame(height: 54 + geo.safeAreaInsets.top + 8)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
-            .padding(.top, BaseTheme.Spacing.md)
-            .padding(.bottom, 100)
-        }
-        .scrollIndicators(.hidden)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: { router.navigation.pop() }) {
-                    Image(systemName: "xmark")
-                        .font(Typography.body(weight: .semibold))
+            .frame(height: 0)
+
+            // Back button flotante
+            HStack{
+                Button {
+                    router.navigation.pop()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Color(.label))
+                        .frame(width: 46, height: 46)
                 }
-            }
+                .buttonStyle(.glass)
+                
+            }.frame(maxWidth: .infinity, alignment: .leading)
+                .padding(BaseTheme.Spacing.md)
         }
-        .background(Color.pageBackground.ignoresSafeArea())
         .offset(y: max(dragOffset, 0))
         .gesture(
             DragGesture()
@@ -81,26 +100,23 @@ struct ModeDetailView: View {
     // MARK: - Hero
 
     private var hero: some View {
-        ZStack(alignment: .topLeading) {
-            // Centered icon + name
-            VStack(spacing: BaseTheme.Spacing.sm) {
-                RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
-                    .fill(Color(hex: vm.mode.colorHex))
-                    .frame(width: 80, height: 80)
-                    .overlay {
-                        Image(systemName: vm.mode.iconName)
-                            .font(.system(size: 34, weight: .medium))
-                            .foregroundStyle(Color(.label))
-                    }
-                    .shadow(color: .black.opacity(0.1), radius: 14, x: 0, y: 4)
+        VStack(spacing: BaseTheme.Spacing.sm) {
+            RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
+                .fill(Color(hex: vm.mode.colorHex))
+                .frame(width: 80, height: 80)
+                .overlay {
+                    Image(systemName: vm.mode.iconName)
+                        .font(.system(size: 34, weight: .medium))
+                        .foregroundStyle(Color(.label))
+                }
+                .shadow(color: .black.opacity(0.1), radius: 14, x: 0, y: 4)
 
-                Text(vm.mode.name)
-                    .font(Typography.title())
-                    .foregroundStyle(Color(.label))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, BaseTheme.Spacing.sm)
+            Text(vm.mode.name)
+                .font(Typography.title())
+                .foregroundStyle(Color(.label))
         }
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, BaseTheme.Spacing.sm)
     }
 
     // MARK: - Overview content
@@ -126,7 +142,7 @@ struct ModeDetailView: View {
 #Preview {
     ModeDetailView(mode: Mode(
         id: UUID(), name: "Gym", iconName: "figure.run",
-        colorHex: "#E8F5E9", state: .inactive, createdAt: .now
+        colorHex: "#E8F5E9", state: ModeState.inactive.rawValue, createdAt: .now
     ))
     .environment(AppRouter())
 }

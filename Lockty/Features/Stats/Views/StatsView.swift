@@ -119,7 +119,7 @@ struct StatsView: View {
                 .buttonStyle(NoFlashButtonStyle())
                 .padding(.horizontal, BaseTheme.Spacing.lg)
             }
-            .padding(.top, BaseTheme.Spacing.md)
+            .padding(.top, 54 + BaseTheme.Spacing.md)
             .padding(.bottom, 100)
         }
         .scrollIndicators(.hidden)

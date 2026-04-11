@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import CoreData
+import RevenueCatUI
 
 struct SettingsView: View {
-    let user: User
+    let user: LocalUser
     @Environment(AppRouter.self) var router
 
     var body: some View {
@@ -22,7 +24,7 @@ struct SettingsView: View {
                         VStack(spacing: BaseTheme.Spacing.xs) {
                             Text(user.displayName)
                                 .font(Typography.sectionTitle())
-                            Text("@\(user.username)")
+                            Text(user.displayName)
                                 .font(Typography.caption())
                                 .foregroundStyle(.secondary)
                         }
@@ -31,54 +33,79 @@ struct SettingsView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section(header: sectionHeader("Profile")) {
-                    row(title: "Display Name", value: user.displayName, disclosure: true) {
+                Section(header: sectionHeader("Perfil")) {
+                    row(title: "Nombre", value: user.displayName, disclosure: true) {
                         router.settings.push(.editDisplayName)
                     }
-                    row(title: "Username", value: "@\(user.username)", disclosure: true) {
-                        router.settings.push(.editUsername)
-                    }
-                    row(title: "Email", value: user.email, disclosure: true) {
-                        router.settings.push(.editEmail)
-                    }
+                    // row(title: "Email", value: user.email, disclosure: true) {
+                    //     router.settings.push(.editEmail)
+                    // }
                 }
 
-                Section(header: sectionHeader("Devices")) {
-                    row(title: "iPhone 17 Pro", value: "Primary", valueColor: .green)
-                    row(title: "iPad Pro", value: "Read-Only")
-                }
+                // Section(header: sectionHeader("Devices")) {
+                //     row(title: "iPhone 17 Pro", value: "Primary", valueColor: .green)
+                //     row(title: "iPad Pro", value: "Read-Only")
+                // }
 
-                Section(header: sectionHeader("Settings")) {
-                    row(title: "Sync", value: "Active", valueColor: .green)
-                    row(title: "Tabs", disclosure: true) {
+                Section(header: sectionHeader("Ajustes")) {
+                    row(title: "Sincronización", value: "Activa", valueColor: .green, disclosure: true) {
+                        router.settings.push(.sync)
+                    }
+                    row(title: "Pestañas", disclosure: true) {
                         router.settings.push(.tabs)
                     }
-                    row(title: "Permissions", disclosure: true) {
+                    row(title: "Permisos", disclosure: true) {
                         router.settings.push(.permissions)
                     }
-                    row(title: "Notifications", disclosure: true) {
+                    row(title: "Notificaciones", disclosure: true) {
                         router.settings.push(.notifications)
                     }
                 }
 
+                Section(header: sectionHeader("Suscripción")) {
+                    row(title: "Gestionar suscripción", disclosure: true) {
+                        router.settings.push(.subscription)
+                    }
+                }
+
                 Section(header: sectionHeader("Legal")) {
-                    row(title: "Privacy Policy", external: true)
-                    row(title: "Terms of Use", external: true)
+                    row(title: "Política de privacidad", external: true)
+                    row(title: "Términos de uso", external: true)
                 }
 
-                Section(header: sectionHeader("Share")) {
-                    row(title: "Contact", external: true)
+                Section(header: sectionHeader("Compartir")) {
+                    row(title: "Contacto", external: true)
                     row(title: "Feedback", external: true)
-                    row(title: "Feature Request", external: true)
-                    row(title: "Rate us", external: true)
+                    row(title: "Sugerencia", external: true)
+                    row(title: "Valorar la app", external: true)
                 }
 
-                Section {
-                    Button(role: .destructive) { } label: {
-                        Text("Sign Out")
+                // Section {
+                //     Button(role: .destructive) { } label: {
+                //         Text("Sign Out")
+                //             .font(Typography.body())
+                //     }
+                // }
+
+                #if DEBUG
+                Section(header: sectionHeader("Desarrollador")) {
+                    Button(role: .destructive) {
+                        let ctx = PersistenceController.shared.context
+                        let req = LocalUserEntity.fetchRequest()
+                        if let entities = try? ctx.fetch(req) {
+                            entities.forEach { ctx.delete($0) }
+                            try? ctx.save()
+                        }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            router.currentUser = nil
+                            router.authState = .onboarding
+                        }
+                    } label: {
+                        Text("Reiniciar onboarding")
                             .font(Typography.body())
                     }
                 }
+                #endif
 
                 Section {
                     Text("v 1.1")
@@ -91,7 +118,7 @@ struct SettingsView: View {
             .scrollIndicators(.hidden)
             .presentationDragIndicator(.hidden)
             .listStyle(.insetGrouped)
-            .navigationTitle("Settings")
+            .navigationTitle("Ajustes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -100,14 +127,16 @@ struct SettingsView: View {
             }
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
-                case .editDisplayName: Text("Edit Display Name")
-                case .editUsername:    Text("Edit Username")
-                case .editEmail:       Text("Edit Email")
-                case .devices:         Text("Devices")
-                case .deviceDetail:    Text("Device Detail")
-                case .tabs:            Text("Tabs")
-                case .permissions:     Text("Permissions")
-                case .notifications:   Text("Notifications")
+                case .editDisplayName: EditDisplayNameView(user: user)
+                case .editUsername:    Text("Nombre de usuario")
+                case .editEmail:       Text("Email")
+                // case .devices:         Text("Dispositivos")
+                // case .deviceDetail:    Text("Detalle dispositivo")
+                case .tabs:            Text("Pestañas")
+                case .permissions:     Text("Permisos")
+                case .notifications:   Text("Notificaciones")
+                case .sync:            SyncSettingsView()
+                case .subscription:    CustomerCenterView()
                 }
             }
         }

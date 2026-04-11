@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LocktyToolbar: View {
     @Binding var selectedTab: AppRouter.Tab
-    let user: User
+    let user: LocalUser
     var onAvatarTap: () -> Void
 
     var body: some View {
@@ -37,6 +37,6 @@ struct LocktyToolbar: View {
 
 #Preview {
     @Previewable @State var selectedTab: AppRouter.Tab = .modes
-    LocktyToolbar(selectedTab: $selectedTab, user: .preview) {}
+    LocktyToolbar(selectedTab: $selectedTab, user: .preview) {}  // LocalUser.preview
         .locktyPageBackground()
 }

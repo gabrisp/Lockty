@@ -11,7 +11,7 @@ struct ModesView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.modeZoomNamespace) private var zoomNamespace
     let activeMode: Mode? = .previewActive
-    let inactiveModes: [Mode] = Mode.previewList.filter { $0.state == .inactive }
+    let inactiveModes: [Mode] = Mode.previewList.filter { $0.state == ModeState.inactive.rawValue }
 
     var body: some View {
         ScrollView(.vertical) {
@@ -66,7 +66,7 @@ struct ModesView: View {
                     .padding(.horizontal, BaseTheme.Spacing.lg)
                 }
             }
-            .padding(.top, BaseTheme.Spacing.md)
+            .padding(.top, 54 + BaseTheme.Spacing.md)
             .padding(.bottom, 100)
         }
         .scrollEdgeEffectStyle(.hard, for: .all)

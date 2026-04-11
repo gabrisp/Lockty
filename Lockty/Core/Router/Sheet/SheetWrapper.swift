@@ -29,7 +29,7 @@ struct SheetWrapper: View {
             set: { if $0 == nil { router.sheet.pop() } }
         )) { next in
             SheetWrapper(sheet: next) {
-                SheetFactory.view(for: next)
+                SheetFactory.view(for: next, user: router.currentUser)
             }
             .environment(router)
         }

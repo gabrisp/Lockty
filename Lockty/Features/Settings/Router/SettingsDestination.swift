@@ -11,9 +11,11 @@ enum SettingsDestination: Hashable {
     case editDisplayName
     case editUsername
     case editEmail
-    case devices
-    case deviceDetail(id: UUID)
+    // case devices
+    // case deviceDetail(id: UUID)
     case tabs
     case permissions
     case notifications
+    case sync
+    case subscription
 }
