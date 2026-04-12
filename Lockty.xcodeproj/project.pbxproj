@@ -12,8 +12,9 @@
 		ED15FD2E2F8A61C70055305F /* PartialSheet in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD2D2F8A61C70055305F /* PartialSheet */; };
 		ED15FD382F8A8CB90055305F /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD372F8A8CB90055305F /* RevenueCat */; };
 		ED15FD3A2F8A8CB90055305F /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD392F8A8CB90055305F /* RevenueCatUI */; };
-		ED15FD412F8A94160055305F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD402F8A94160055305F /* FirebaseAuth */; };
 		ED15FD4F2F8AEC190055305F /* Drops in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD4E2F8AEC190055305F /* Drops */; };
+		ED15FD5E2F8B98450055305F /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD5D2F8B98450055305F /* FirebaseAuth */; };
+		ED15FD602F8B98450055305F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD5F2F8B98450055305F /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,11 +48,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED15FD102F8954BC0055305F /* ProgressiveBlurHeader in Frameworks */,
-				ED15FD412F8A94160055305F /* FirebaseAuth in Frameworks */,
 				ED15FD4F2F8AEC190055305F /* Drops in Frameworks */,
 				ED15FD132F8957590055305F /* VariableBlur in Frameworks */,
 				ED15FD3A2F8A8CB90055305F /* RevenueCatUI in Frameworks */,
 				ED15FD382F8A8CB90055305F /* RevenueCat in Frameworks */,
+				ED15FD602F8B98450055305F /* FirebaseFirestore in Frameworks */,
+				ED15FD5E2F8B98450055305F /* FirebaseAuth in Frameworks */,
 				ED15FD2E2F8A61C70055305F /* PartialSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -100,8 +102,9 @@
 				ED15FD2D2F8A61C70055305F /* PartialSheet */,
 				ED15FD372F8A8CB90055305F /* RevenueCat */,
 				ED15FD392F8A8CB90055305F /* RevenueCatUI */,
-				ED15FD402F8A94160055305F /* FirebaseAuth */,
 				ED15FD4E2F8AEC190055305F /* Drops */,
+				ED15FD5D2F8B98450055305F /* FirebaseAuth */,
+				ED15FD5F2F8B98450055305F /* FirebaseFirestore */,
 			);
 			productName = Lockty;
 			productReference = ED950AEA2F6FE6BE000959F4 /* Lockty.app */;
@@ -136,8 +139,8 @@
 				ED15FD112F8957590055305F /* XCRemoteSwiftPackageReference "VariableBlur" */,
 				ED15FD2C2F8A61C70055305F /* XCRemoteSwiftPackageReference "PartialSheet" */,
 				ED15FD362F8A8CB90055305F /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
-				ED15FD3F2F8A94160055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				ED15FD4D2F8AEC190055305F /* XCRemoteSwiftPackageReference "Drops" */,
+				ED15FD5C2F8B98450055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = ED950AEB2F6FE6BE000959F4 /* Products */;
@@ -415,20 +418,20 @@
 				minimumVersion = 5.67.2;
 			};
 		};
-		ED15FD3F2F8A94160055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.12.0;
-			};
-		};
 		ED15FD4D2F8AEC190055305F /* XCRemoteSwiftPackageReference "Drops" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/omaralbeik/Drops";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.7.0;
+			};
+		};
+		ED15FD5C2F8B98450055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.12.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -459,15 +462,20 @@
 			package = ED15FD362F8A8CB90055305F /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
 			productName = RevenueCatUI;
 		};
-		ED15FD402F8A94160055305F /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = ED15FD3F2F8A94160055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
 		ED15FD4E2F8AEC190055305F /* Drops */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = ED15FD4D2F8AEC190055305F /* XCRemoteSwiftPackageReference "Drops" */;
 			productName = Drops;
+		};
+		ED15FD5D2F8B98450055305F /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED15FD5C2F8B98450055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		ED15FD5F2F8B98450055305F /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED15FD5C2F8B98450055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

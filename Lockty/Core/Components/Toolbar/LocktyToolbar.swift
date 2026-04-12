@@ -12,9 +12,12 @@ struct LocktyToolbar: View {
     let user: LocalUser
     var onAvatarTap: () -> Void
 
+    @State private var appeared = false
+
     var body: some View {
+        let tabs = AppRouter.Tab.allCases
         HStack(alignment: .bottom, spacing: 16) {
-            ForEach(AppRouter.Tab.allCases, id: \.self) { tab in
+            ForEach(Array(tabs.enumerated()), id: \.element) { index, tab in
                 Button {
                     withAnimation(.snappy) { selectedTab = tab }
                 } label: {
@@ -24,14 +27,21 @@ struct LocktyToolbar: View {
                 }
                 .buttonStyle(.plain)
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
+                .opacity(appeared ? 1 : 0)
+                .blur(radius: appeared ? 0 : 12)
+                .animation(.snappy(duration: 0.6, extraBounce: 0.02).delay(Double(index) * 0.12), value: appeared)
             }
 
             Spacer()
 
             AvatarView(name: user.displayName, size: .toolbar, action: onAvatarTap)
+                .opacity(appeared ? 1 : 0)
+                .blur(radius: appeared ? 0 : 12)
+                .animation(.easeOut(duration: 0.6).delay(Double(tabs.count) * 0.12), value: appeared)
         }
         .frame(height: 46)
         .padding(.horizontal, BaseTheme.Spacing.lg)
+        .onAppear { appeared = true }
     }
 }
 

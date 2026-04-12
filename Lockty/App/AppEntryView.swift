@@ -14,22 +14,29 @@ struct AppEntryView: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        Group {
+        ZStack {
             switch router.authState {
             case .loading:
-                // SPLASH DESHABILITADO — se navega en cuanto resolveAuthState termina
                 Color.pageBackground.ignoresSafeArea()
                     .task { await resolveAuthState() }
 
             case .onboarding:
                 OnboardingView()
                     .environment(router)
+                    .transition(AnyTransition(.blurReplace).combined(with: .opacity))
 
             case .authenticated:
                 RootView()
                     .environment(router)
+                    .transition(AnyTransition(.blurReplace).combined(with: .opacity))
+                    .task(id: router.authState) {
+                        router.selectedTab = .modes
+                        router.navigation.popToRoot()
+                        router.sheet.popToRoot()
+                    }
             }
         }
+        .animation(.easeInOut(duration: 0.4), value: router.authState)
     }
 
     // MARK: - Auth resolution
@@ -63,9 +70,7 @@ struct AppEntryView: View {
         }
 
         await MainActor.run {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                router.authState = destination
-            }
+            router.authState = destination
         }
     }
 }

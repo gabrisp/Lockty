@@ -18,6 +18,9 @@ struct NameStep: View {
                     .font(Typography.body())
                     .foregroundStyle(Color(.secondaryLabel))
             }
+            .geometryGroup()
+         
+
 
             TextField("Tu nombre", text: $vm.displayName)
                 .font(Typography.body())
@@ -25,8 +28,13 @@ struct NameStep: View {
                 .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
                 .autocorrectionDisabled()
+                .geometryGroup()
+              
         }
         .padding(.horizontal, BaseTheme.Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .onboardingSecondaryAction(label: "Iniciar sesión") {
+            vm.jumpToSignIn()
+        }
     }
 }

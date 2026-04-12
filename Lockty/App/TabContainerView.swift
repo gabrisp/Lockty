@@ -29,11 +29,6 @@ struct TabContainerView: View {
                         .containerRelativeFrame(.horizontal)
                         .environment(router)
 
-                    SettingsView(user: router.currentUser ?? .preview)
-                        .id(AppRouter.Tab.profile)
-                        .containerRelativeFrame(.horizontal)
-                        .environment(router)
-
                     // SocialView()
                     //     .id(AppRouter.Tab.social)
                     //     .containerRelativeFrame(.horizontal)

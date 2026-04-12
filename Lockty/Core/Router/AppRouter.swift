@@ -14,7 +14,7 @@ final class AppRouter {
     var authState: AuthState = .loading
     var currentUser: LocalUser? = nil
 
-    enum AuthState {
+    enum AuthState: Equatable {
         case loading
         case onboarding
         case authenticated
@@ -35,14 +35,12 @@ final class AppRouter {
     enum Tab: String, CaseIterable, Hashable {
         case modes
         case stats
-        case profile
         // case social  // comentado hasta activar el social
 
         var label: String {
             switch self {
-            case .modes:   return "Modos"
-            case .stats:   return "Stats"
-            case .profile: return "Perfil"
+            case .modes: return "Modos"
+            case .stats: return "Stats"
             // case .social: return "Social"
             }
         }

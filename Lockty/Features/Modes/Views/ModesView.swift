@@ -13,6 +13,8 @@ struct ModesView: View {
     let activeMode: Mode? = .previewActive
     let inactiveModes: [Mode] = Mode.previewList.filter { $0.state == ModeState.inactive.rawValue }
 
+    @State private var appeared = false
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: BaseTheme.Spacing.lg) {
@@ -71,6 +73,10 @@ struct ModesView: View {
         }
         .scrollEdgeEffectStyle(.hard, for: .all)
         .scrollIndicators(.hidden)
+        .opacity(appeared ? 1 : 0)
+        .blur(radius: appeared ? 0 : 12)
+        .animation(.snappy(duration: 0.6, extraBounce: 0.02).delay(0.6), value: appeared)
+        .onAppear { appeared = true }
     }
 }
 

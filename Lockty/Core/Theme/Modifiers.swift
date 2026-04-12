@@ -75,6 +75,19 @@ struct OnboardingCTALabelKey: PreferenceKey {
     }
 }
 
+struct OnboardingSecondaryAction: Equatable {
+    let label: String
+    let action: () -> Void
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.label == rhs.label }
+}
+
+struct OnboardingSecondaryActionKey: PreferenceKey {
+    static let defaultValue: OnboardingSecondaryAction? = nil
+    static func reduce(value: inout OnboardingSecondaryAction?, nextValue: () -> OnboardingSecondaryAction?) {
+        value = value ?? nextValue()
+    }
+}
+
 struct OnboardingBackAction: Equatable {
     let action: () -> Void
     static func == (lhs: Self, rhs: Self) -> Bool { false }
@@ -135,9 +148,14 @@ extension View {
         preference(key: OnboardingCTALabelKey.self, value: label)
     }
 
+    /// Pasa contenido a la sección secundaria del bottom overlay del onboarding.
+    func onboardingSecondaryAction(label: String, action: @escaping () -> Void) -> some View {
+        preference(key: OnboardingSecondaryActionKey.self, value: OnboardingSecondaryAction(label: label, action: action))
+    }
+
     /// Override de la acción del botón de back del onboarding en este step.
-    func onboardingBackButtonOverride(_ action: @escaping () -> Void) -> some View {
-        preference(key: OnboardingBackOverrideKey.self, value: OnboardingBackAction(action: action))
+    func onboardingBackButtonOverride(_ action: (() -> Void)?) -> some View {
+        preference(key: OnboardingBackOverrideKey.self, value: action.map { OnboardingBackAction(action: $0) })
     }
 
     @ViewBuilder
