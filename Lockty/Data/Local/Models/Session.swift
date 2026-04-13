@@ -56,3 +56,34 @@ struct AppBlock: Identifiable, Hashable {
     var timestamp: Date
     var duringBreak: Bool
 }
+
+struct ActiveModeRuntimeStatus: Hashable {
+    var elapsedTimeText: String
+    var triggerLabel: String
+    var blockedAppsSummary: String
+    var rulesSummary: String
+    var breakPolicy: BreakPolicyStatus
+    var finishPolicy: FinishPolicyStatus
+    var helperText: String
+}
+
+struct BreakPolicyStatus: Hashable {
+    var breaksUsed: Int
+    var maxBreaks: Int
+    var maxBreakDurationText: String
+    var minIntervalText: String
+    var nextBreakAvailableInText: String?
+
+    var breaksRemaining: Int {
+        max(maxBreaks - breaksUsed, 0)
+    }
+
+    var canStartBreak: Bool {
+        breaksRemaining > 0 && nextBreakAvailableInText == nil
+    }
+}
+
+struct FinishPolicyStatus: Hashable {
+    var canFinish: Bool
+    var requirementText: String
+}

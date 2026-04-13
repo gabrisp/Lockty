@@ -9,17 +9,12 @@ import SwiftUI
 
 struct ActiveModeCard: View {
     let mode: Mode
-    let elapsedTime: String
-    let trigger: String
+    let status: ActiveModeRuntimeStatus
     var onBreak: () -> Void
     var onFinish: () -> Void
 
     var body: some View {
             VStack(alignment: .center, spacing: BaseTheme.Spacing.lg) {
-                // Header — icon + name + apps/rules + active badge
-               
-
-                
                 HStack(alignment: .top) {
                     VStack(spacing: BaseTheme.Spacing.sm) {
                         RoundedRectangle(cornerRadius: BaseTheme.Spacing.lg, style: .continuous)
@@ -38,11 +33,11 @@ struct ActiveModeCard: View {
                             Text(mode.name)
                                 .font(Typography.body(weight: .bold))
                             HStack(spacing: BaseTheme.Spacing.xs) {
-                                Text("3 apps")
+                                Text(status.blockedAppsSummary)
                                 Circle()
                                     .fill(Color(.secondaryLabel))
                                     .frame(width: BaseTheme.Spacing.xs, height: BaseTheme.Spacing.xs)
-                                Text("3 rules")
+                                Text(status.rulesSummary)
                             }
                             .font(Typography.caption())
                             .foregroundStyle(Color(.secondaryLabel))
@@ -50,22 +45,52 @@ struct ActiveModeCard: View {
                     }
                 }
 
-
-                // Timer
-                Text(elapsedTime)
+                Text(status.elapsedTimeText)
                     .font(Typography.extraLargeTitle(weight: .semibold))
                     .foregroundStyle(Color(.label))
 
-                // Buttons
-                HStack(spacing: BaseTheme.Spacing.lg) {
-                    PrimaryButton(action: onBreak) {
-                        Text("Take a Break")
-                            .font(Typography.body(weight: .semibold))
+                VStack(spacing: BaseTheme.Spacing.sm) {
+                    HStack(spacing: BaseTheme.Spacing.sm) {
+                        policyPill(
+                            title: "\(status.breakPolicy.breaksRemaining)/\(status.breakPolicy.maxBreaks) breaks left",
+                            subtitle: status.breakPolicy.canStartBreak
+                                ? "Available now"
+                                : "Next in \(status.breakPolicy.nextBreakAvailableInText ?? "0m")"
+                        )
+                        policyPill(
+                            title: status.breakPolicy.maxBreakDurationText,
+                            subtitle: status.breakPolicy.minIntervalText
+                        )
                     }
 
-                    DestructiveButton(action: onFinish) {
-                        Text("Finish")
-                            .font(Typography.body(weight: .semibold))
+                    Text(status.finishPolicy.requirementText)
+                        .font(Typography.caption())
+                        .foregroundStyle(Color(.secondaryLabel))
+                        .multilineTextAlignment(.center)
+
+                    Text(status.helperText)
+                        .font(Typography.caption())
+                        .foregroundStyle(Color(.secondaryLabel))
+                        .multilineTextAlignment(.center)
+                }
+
+                HStack(spacing: BaseTheme.Spacing.lg) {
+                    PrimaryButton(isDisabled: !status.breakPolicy.canStartBreak, action: onBreak) {
+                        VStack(spacing: 2) {
+                            Text("Take a Break")
+                                .font(Typography.body(weight: .semibold))
+                            Text("\(status.breakPolicy.breaksRemaining) left")
+                                .font(Typography.caption())
+                        }
+                    }
+
+                    DestructiveButton(isDisabled: !status.finishPolicy.canFinish, action: onFinish) {
+                        VStack(spacing: 2) {
+                            Text("Finish")
+                                .font(Typography.body(weight: .semibold))
+                            Text(status.finishPolicy.canFinish ? "Allowed now" : "Locked")
+                                .font(Typography.caption())
+                        }
                     }
                 }
             }
@@ -79,13 +104,27 @@ struct ActiveModeCard: View {
             .padding(BaseTheme.Spacing.lg)
 
     }
+
+    private func policyPill(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(Typography.caption(weight: .semibold))
+                .foregroundStyle(Color(.label))
+            Text(subtitle)
+                .font(Typography.micro())
+                .foregroundStyle(Color(.secondaryLabel))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(BaseTheme.Spacing.md)
+        .background(Color.innerBackground)
+        .locktyRadius(BaseTheme.Radius.md)
+    }
 }
 
 #Preview {
     ActiveModeCard(
         mode: .previewActive,
-        elapsedTime: "02h 44m 02s",
-        trigger: "Manual",
+        status: .previewUniversity,
         onBreak: {},
         onFinish: {}
     )

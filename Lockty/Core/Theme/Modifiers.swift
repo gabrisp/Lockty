@@ -7,6 +7,24 @@
 
 import SwiftUI
 
+@MainActor
+@Observable
+final class MainToolbarStore {
+    var leadingContent: AnyView? = nil
+    var ownerID: UUID? = nil
+
+    func set<Content: View>(ownerID: UUID, @ViewBuilder content: () -> Content) {
+        self.ownerID = ownerID
+        self.leadingContent = AnyView(content())
+    }
+
+    func clear(ownerID: UUID) {
+        guard self.ownerID == ownerID else { return }
+        self.ownerID = nil
+        self.leadingContent = nil
+    }
+}
+
 // MARK: - Card
 struct CardModifier: ViewModifier {
     func body(content: Content) -> some View {
@@ -47,6 +65,32 @@ struct TappableModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .contentShape(Rectangle())
+    }
+}
+
+struct MainToolbarCustomModifier<ToolbarContent: View>: ViewModifier {
+    @Environment(MainToolbarStore.self) private var toolbarStore
+
+    let visible: Bool
+    let refreshID: AnyHashable
+    let toolbarContent: () -> ToolbarContent
+
+    @State private var ownerID = UUID()
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { updateToolbar() }
+            .onDisappear { toolbarStore.clear(ownerID: ownerID) }
+            .onChange(of: visible) { _, _ in updateToolbar() }
+            .onChange(of: refreshID) { _, _ in updateToolbar() }
+    }
+
+    private func updateToolbar() {
+        if visible {
+            toolbarStore.set(ownerID: ownerID, content: toolbarContent)
+        } else {
+            toolbarStore.clear(ownerID: ownerID)
+        }
     }
 }
 
@@ -131,6 +175,20 @@ extension View {
     }
     func tappable() -> some View {
         modifier(TappableModifier())
+    }
+
+    func mainToolbarCustom<ToolbarContent: View>(
+        visible: Bool = true,
+        refreshID: AnyHashable = 0,
+        @ViewBuilder _ content: @escaping () -> ToolbarContent
+    ) -> some View {
+        modifier(
+            MainToolbarCustomModifier(
+                visible: visible,
+                refreshID: refreshID,
+                toolbarContent: content
+            )
+        )
     }
 
     /// Oculta la barra de progreso del onboarding en este step.

@@ -9,15 +9,14 @@ import SwiftUI
 
 // MARK: - RulesCard
 
-/// Tarjeta de reglas de un modo. Agrupa participantes por transición (Activate / Break / Finish).
-/// Cada grupo tiene un label de sección, chips de participantes y un separador inferior
-/// (excepto el último grupo). Termina con el AI insight.
-
 struct RulesCard: View {
     let groups: [RuleGroup]
     var insight: String? = nil
     var isLoadingInsight: Bool = false
     var onSeeFlow: (() -> Void)? = nil
+    var onAddRule: ((Transition) -> Void)? = nil
+    var onDeleteRule: ((UUID) -> Void)? = nil
+    var isEditing: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,18 +28,20 @@ struct RulesCard: View {
 
                 Spacer()
 
-                Button {
-                    onSeeFlow?()
-                } label: {
-                    Text("See Flow")
-                        .font(Typography.caption())
-                        .foregroundStyle(Color(.secondaryLabel))
-                        .padding(.horizontal, BaseTheme.Spacing.md)
-                        .frame(height: BaseTheme.Spacing.xxl)
-                        .background(Color.innerBackground)
-                        .clipShape(Capsule())
+                if !isEditing, onSeeFlow != nil {
+                    Button {
+                        onSeeFlow?()
+                    } label: {
+                        Text("See Flow")
+                            .font(Typography.caption())
+                            .foregroundStyle(Color(.secondaryLabel))
+                            .padding(.horizontal, BaseTheme.Spacing.md)
+                            .frame(height: BaseTheme.Spacing.xxl)
+                            .background(Color.innerBackground)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(NoFlashButtonStyle())
                 }
-                .buttonStyle(NoFlashButtonStyle())
             }
             .padding(.top, BaseTheme.Spacing.lg)
             .padding(.bottom, BaseTheme.Spacing.md)
@@ -48,7 +49,13 @@ struct RulesCard: View {
             // Groups card
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(groups.enumerated()), id: \.offset) { i, group in
-                    RuleGroupRow(group: group, showDivider: i < groups.count - 1)
+                    RuleGroupRow(
+                        group: group,
+                        showDivider: i < groups.count - 1,
+                        onAdd: onAddRule.map { cb in { cb(group.transition) } },
+                        onDelete: onDeleteRule,
+                        isEditing: isEditing
+                    )
                 }
 
                 // AI insight
@@ -88,18 +95,40 @@ struct RulesCard: View {
 private struct RuleGroupRow: View {
     let group: RuleGroup
     let showDivider: Bool
+    var onAdd: (() -> Void)? = nil
+    var onDelete: ((UUID) -> Void)? = nil
+    var isEditing: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
-            // Label + participant chips
-            FlowLayout(spacing: BaseTheme.Spacing.sm) {
+            HStack(spacing: BaseTheme.Spacing.xs) {
                 Text(group.title)
                     .font(Typography.caption())
                     .foregroundStyle(Color(.secondaryLabel))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
-                ForEach(group.participants) { participant in
-                    RuleParticipantChip(participant: participant)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: BaseTheme.Spacing.sm) {
+                    if group.participants.isEmpty, isEditing {
+                        Text("No rules yet")
+                            .font(Typography.caption())
+                            .foregroundStyle(Color(.secondaryLabel))
+                            .padding(.horizontal, BaseTheme.Spacing.md)
+                            .frame(height: 44)
+                            .background(Color.innerBackground)
+                            .locktyRadius(BaseTheme.Radius.md)
+                    } else {
+                        ForEach(group.participants) { participant in
+                            RuleParticipantChip(
+                                participant: participant,
+                                onDelete: onDelete.map { delete in { delete(participant.id) } }
+                            )
+                        }
+                    }
+
+                    if let onAdd {
+                        ToolbarButton(icon: "plus", size: 40, iconSize: 13, action: onAdd)
+                    }
                 }
             }
 
@@ -116,72 +145,40 @@ private struct RuleGroupRow: View {
 
 private struct RuleParticipantChip: View {
     let participant: RuleParticipant
+    var onDelete: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: BaseTheme.Spacing.xs) {
-            Circle()
-                .fill(participant.accentColor)
-                .frame(width: 20, height: 20)
+            HStack(alignment: .top, spacing: BaseTheme.Spacing.xs) {
+                Circle()
+                    .fill(participant.accentColor)
+                    .frame(width: 20, height: 20)
+
+                if let onDelete {
+                    Button(action: onDelete) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color(.secondaryLabel))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
 
             VStack(spacing: 1) {
                 Text(participant.label)
                     .font(Typography.caption(weight: .bold))
                     .foregroundStyle(Color(.label))
 
-                Text(participant.sublabel)
-                    .font(Typography.micro())
-                    .foregroundStyle(Color(.secondaryLabel))
+                if !participant.sublabel.isEmpty {
+                    Text(participant.sublabel)
+                        .font(Typography.micro())
+                        .foregroundStyle(Color(.secondaryLabel))
+                }
             }
         }
         .padding(BaseTheme.Spacing.md)
         .background(participant.accentColor.opacity(0.1))
         .locktyRadius(BaseTheme.Radius.md)
-    }
-}
-
-// MARK: - FlowLayout (wrapping HStack)
-
-private struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
-        let result = layout(subviews: subviews, in: proposal.width ?? 0)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
-        let result = layout(subviews: subviews, in: bounds.width)
-        for (index, frame) in result.frames.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
-                proposal: ProposedViewSize(frame.size)
-            )
-        }
-    }
-
-    private func layout(subviews: Subviews, in width: CGFloat) -> (size: CGSize, frames: [CGRect]) {
-        var frames: [CGRect] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            // "Activate" label gets full width on its own row
-            if currentX + size.width > width, currentX > 0 {
-                currentX = 0
-                currentY += rowHeight + spacing
-                rowHeight = 0
-            }
-            frames.append(CGRect(origin: CGPoint(x: currentX, y: currentY), size: size))
-            currentX += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-        }
-
-        return (
-            size: CGSize(width: width, height: currentY + rowHeight),
-            frames: frames
-        )
     }
 }
 

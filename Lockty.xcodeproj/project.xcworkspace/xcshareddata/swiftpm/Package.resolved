@@ -1,5 +1,5 @@
 {
-  "originHash" : "2aa0a270f6d2b25fdfb80c804d4043a7fb96c5557568fc89c479335538fd061c",
+  "originHash" : "cb17c284b54ce947589b550bea77182f956c9d88a4cfcd642bbe1837185b1920",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -116,15 +116,6 @@
       "state" : {
         "revision" : "b7e1104502eca3a213b46303391ca4d3bc8ddec1",
         "version" : "2.30910.0"
-      }
-    },
-    {
-      "identity" : "partialsheet",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/nikstar/PartialSheet",
-      "state" : {
-        "branch" : "master",
-        "revision" : "415fafa8ed719613b3abc787d52a8aa32a4998b9"
       }
     },
     {

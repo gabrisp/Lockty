@@ -10,29 +10,90 @@ import SwiftUI
 struct ModesView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.modeZoomNamespace) private var zoomNamespace
-    let activeMode: Mode? = .previewActive
-    let inactiveModes: [Mode] = Mode.previewList.filter { $0.state == ModeState.inactive.rawValue }
+    @State private var vm = ModesViewModel()
 
     @State private var appeared = false
 
     var body: some View {
+        Group {
+            if vm.isEmpty {
+                emptyState
+            } else {
+                modesContent
+            }
+        }
+        .opacity(appeared ? 1 : 0)
+        .blur(radius: appeared ? 0 : 12)
+        .animation(.snappy(duration: 0.6, extraBounce: 0.02).delay(0.6), value: appeared)
+        .onAppear {
+            appeared = true
+            vm.loadModes()
+        }
+        .sheet(item: $vm.activationPrompt) { prompt in
+            DynamicSheet {
+                ModeActivationPromptSheet(prompt: prompt)
+            }
+        }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: BaseTheme.Spacing.lg) {
+            Image(systemName: "lock.open.fill")
+                .font(.system(size: 48, weight: .semibold))
+                .foregroundStyle(Color(.tertiaryLabel))
+
+            VStack(spacing: BaseTheme.Spacing.xs) {
+                Text("Sin modos")
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+                Text("Crea tu primer modo para empezar a bloquear apps.")
+                    .font(Typography.body())
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .multilineTextAlignment(.center)
+            }
+
+            PrimaryButton {
+                router.openCreateMode()
+            } label: {
+                Text("Crear modo")
+                    .font(Typography.body(weight: .semibold))
+            }
+            .padding(.horizontal, BaseTheme.Spacing.xl)
+            .padding(.top, BaseTheme.Spacing.sm)
+        }
+        .padding(.horizontal, BaseTheme.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Modes content
+
+    private var modesContent: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: BaseTheme.Spacing.lg) {
 
                 // MARK: - Active Mode Banner
-                if let mode = activeMode {
+                if let mode = vm.activeMode, let status = vm.activeModeStatus {
                     ActiveModeCard(
                         mode: mode,
-                        elapsedTime: "02h 44m 02s",
-                        trigger: "Manual",
+                        status: status,
                         onBreak: {},
                         onFinish: {}
                     )
                 }
 
+                // homeInsightsSection
+
                 // MARK: - Inactive Modes Grid
                 VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
-                    Text("Inactive")
+                    // if vm.activeMode != nil {
+                    //     Text("Modos")
+                    //         .font(Typography.body(weight: .semibold))
+                    //         .foregroundStyle(Color(.secondaryLabel))
+                    //         .padding(.horizontal, BaseTheme.Spacing.lg)
+                    // }
+                    Text("Modes")
                         .font(Typography.body(weight: .semibold))
                         .foregroundStyle(Color(.secondaryLabel))
                         .padding(.horizontal, BaseTheme.Spacing.lg)
@@ -41,14 +102,16 @@ struct ModesView: View {
                         columns: [GridItem(.flexible()), GridItem(.flexible())],
                         spacing: BaseTheme.Spacing.lg
                     ) {
-                        ForEach(inactiveModes) { mode in
+                        ForEach(vm.inactiveModes) { mode in
                             ModeCard(
                                 name: mode.name,
                                 icon: mode.iconName,
                                 colorHex: mode.colorHex,
-                                subtitle: "2 apps"
+                                subtitle: ""
                             ) {
                                 router.navigation.push(.modeDetail(mode: mode))
+                            } onPlay: {
+                                vm.handlePlay(for: mode)
                             }
                             .ifLet(zoomNamespace) { view, ns in
                                 view.matchedTransitionSource(id: mode.id, in: ns) {
@@ -58,12 +121,15 @@ struct ModesView: View {
                             }
                         }
 
+                        // Nueva tarjeta
                         ModeCard(
-                            name: "New Mode",
+                            name: "Nuevo",
                             icon: "plus",
                             colorHex: "#F2F2F7",
                             subtitle: ""
-                        )
+                        ) {
+                            router.openCreateMode()
+                        }
                     }
                     .padding(.horizontal, BaseTheme.Spacing.lg)
                 }
@@ -73,10 +139,36 @@ struct ModesView: View {
         }
         .scrollEdgeEffectStyle(.hard, for: .all)
         .scrollIndicators(.hidden)
-        .opacity(appeared ? 1 : 0)
-        .blur(radius: appeared ? 0 : 12)
-        .animation(.snappy(duration: 0.6, extraBounce: 0.02).delay(0.6), value: appeared)
-        .onAppear { appeared = true }
+    }
+}
+
+private struct ModeActivationPromptSheet: View {
+    let prompt: ModeActivationPrompt
+
+    var body: some View {
+        VStack(spacing: BaseTheme.Spacing.lg) {
+            RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
+                .fill(Color.cardBackground)
+                .frame(width: 72, height: 72)
+                .overlay {
+                    Image(systemName: prompt.icon)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(Color(.label))
+                }
+
+            VStack(spacing: BaseTheme.Spacing.xs) {
+                Text(prompt.title)
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+
+                Text(prompt.message)
+                    .font(Typography.body())
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.horizontal, BaseTheme.Spacing.xl)
+        .padding(.vertical, BaseTheme.Spacing.xl)
     }
 }
 

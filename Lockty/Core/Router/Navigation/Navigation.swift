@@ -16,5 +16,8 @@ enum NavigationDestination: Hashable {
 
     /// Pantalla de detalle de un modo
     case modeDetail(mode: Mode)
+
+    /// Pantalla de creación de un modo nuevo
+    case createMode
 }
 

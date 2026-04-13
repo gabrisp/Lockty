@@ -29,6 +29,7 @@ struct DynamicSheet<Content: View>: View {
             }
         }
         .modifier(SheetHeightModifier(height: sheetHeight))
+        .presentationDragIndicator(.visible)
     }
 
     var windowSize: CGSize {

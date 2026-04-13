@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		ED15FD102F8954BC0055305F /* ProgressiveBlurHeader in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD0F2F8954BC0055305F /* ProgressiveBlurHeader */; };
 		ED15FD132F8957590055305F /* VariableBlur in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD122F8957590055305F /* VariableBlur */; };
-		ED15FD2E2F8A61C70055305F /* PartialSheet in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD2D2F8A61C70055305F /* PartialSheet */; };
 		ED15FD382F8A8CB90055305F /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD372F8A8CB90055305F /* RevenueCat */; };
 		ED15FD3A2F8A8CB90055305F /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD392F8A8CB90055305F /* RevenueCatUI */; };
 		ED15FD4F2F8AEC190055305F /* Drops in Frameworks */ = {isa = PBXBuildFile; productRef = ED15FD4E2F8AEC190055305F /* Drops */; };
@@ -54,7 +53,6 @@
 				ED15FD382F8A8CB90055305F /* RevenueCat in Frameworks */,
 				ED15FD602F8B98450055305F /* FirebaseFirestore in Frameworks */,
 				ED15FD5E2F8B98450055305F /* FirebaseAuth in Frameworks */,
-				ED15FD2E2F8A61C70055305F /* PartialSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -99,7 +97,6 @@
 			packageProductDependencies = (
 				ED15FD0F2F8954BC0055305F /* ProgressiveBlurHeader */,
 				ED15FD122F8957590055305F /* VariableBlur */,
-				ED15FD2D2F8A61C70055305F /* PartialSheet */,
 				ED15FD372F8A8CB90055305F /* RevenueCat */,
 				ED15FD392F8A8CB90055305F /* RevenueCatUI */,
 				ED15FD4E2F8AEC190055305F /* Drops */,
@@ -137,7 +134,6 @@
 			packageReferences = (
 				ED15FD0E2F8954BC0055305F /* XCRemoteSwiftPackageReference "ProgressiveBlurHeader" */,
 				ED15FD112F8957590055305F /* XCRemoteSwiftPackageReference "VariableBlur" */,
-				ED15FD2C2F8A61C70055305F /* XCRemoteSwiftPackageReference "PartialSheet" */,
 				ED15FD362F8A8CB90055305F /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 				ED15FD4D2F8AEC190055305F /* XCRemoteSwiftPackageReference "Drops" */,
 				ED15FD5C2F8B98450055305F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
@@ -402,14 +398,6 @@
 				kind = branch;
 			};
 		};
-		ED15FD2C2F8A61C70055305F /* XCRemoteSwiftPackageReference "PartialSheet" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/nikstar/PartialSheet";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		ED15FD362F8A8CB90055305F /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm";
@@ -446,11 +434,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = ED15FD112F8957590055305F /* XCRemoteSwiftPackageReference "VariableBlur" */;
 			productName = VariableBlur;
-		};
-		ED15FD2D2F8A61C70055305F /* PartialSheet */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = ED15FD2C2F8A61C70055305F /* XCRemoteSwiftPackageReference "PartialSheet" */;
-			productName = PartialSheet;
 		};
 		ED15FD372F8A8CB90055305F /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;

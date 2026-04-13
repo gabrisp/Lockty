@@ -7,11 +7,19 @@
 
 import SwiftUI
 
+private struct StatsScrollOffsetKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 struct StatsView: View {
     @Environment(AppRouter.self) private var router
     let stats: DailyStats = .preview
 
     @State private var selectedDate: Date = .now
+    @State private var scrollOffset: CGFloat = 0
 
     private var weekDays: [PickerDay] {
         Calendar.current.weekDays(containing: selectedDate)
@@ -33,9 +41,24 @@ struct StatsView: View {
         .init(name: "X",         icon: "xmark",      count: 10),
     ]
 
+    private let mostUsedApps: [UsageHighlightApp] = [
+        .init(name: "Instagram", tint: Color(hex: "#FCE8E3"), time: "5h 12m"),
+        .init(name: "WhatsApp", tint: Color(hex: "#D4F1E4"), time: "3h 48m"),
+        .init(name: "Safari", tint: Color(hex: "#D6EEFF"), time: "2h 26m"),
+        .init(name: "YouTube", tint: Color(hex: "#FFE5CC"), time: "2h 03m"),
+    ]
+
     var body: some View {
         ScrollView(.vertical) {
             VStack(spacing: BaseTheme.Spacing.lg) {
+                GeometryReader { proxy in
+                    Color.clear
+                        .preference(
+                            key: StatsScrollOffsetKey.self,
+                            value: proxy.frame(in: .named("stats-scroll")).minY
+                        )
+                }
+                .frame(height: 0)
 
                 // MARK: Date picker — sin padding lateral para llegar a bordes
                 WeekDatePicker(days: weekDays, selectedDate: $selectedDate)
@@ -66,8 +89,19 @@ struct StatsView: View {
                 .buttonStyle(NoFlashButtonStyle())
                 .padding(.horizontal, BaseTheme.Spacing.lg)
 
+                UsageHighlightsSection(
+                    weekUsage: "19h 24m",
+                    weeklyPickups: 142,
+                    apps: mostUsedApps
+                )
+                .padding(.horizontal, BaseTheme.Spacing.lg)
+
                 // MARK: Sessions / Breaks / Blocks
                 HStack(spacing: BaseTheme.Spacing.lg) {
+                    // Estos valores siguen siendo placeholder por ahora.
+                    // El proyecto pide permiso de FamilyControls, pero todavía no tiene
+                    // una capa montada de reporting real con DeviceActivity para leer
+                    // Screen Time de forma fiable dentro de esta vista.
                     StatCard(pretitle: "Sessions", value: "\(stats.sessions)")
                     StatCard(pretitle: "Breaks",   value: "\(stats.breaks)")
                     StatCard(pretitle: "Blocks",   value: "\(stats.blocked)")
@@ -96,6 +130,14 @@ struct StatsView: View {
                 .buttonStyle(NoFlashButtonStyle())
                 .padding(.horizontal, BaseTheme.Spacing.lg)
 
+                // MARK: Most used apps
+                // MostUsedAppsCard(
+                //     pretitle: "Most Used Apps",
+                //     apps: mostUsedApps,
+                //     insight: "Instagram and WhatsApp still lead your week. Safari grows on days with fewer pickups."
+                // )
+                // .padding(.horizontal, BaseTheme.Spacing.lg)
+
                 // MARK: Week chart
                 Button { router.openStatWeekChart() } label: {
                     WeekBarChartCard(
@@ -122,7 +164,19 @@ struct StatsView: View {
             .padding(.top, 54 + BaseTheme.Spacing.md)
             .padding(.bottom, 100)
         }
+        .coordinateSpace(name: "stats-scroll")
+        .onPreferenceChange(StatsScrollOffsetKey.self) { scrollOffset = $0 }
         .scrollIndicators(.hidden)
+        .mainToolbarCustom(
+            visible: showWeekRangeInToolbar,
+            refreshID: "\(weekRangeTitle)-\(showWeekRangeInToolbar)"
+        ) {
+            HStack(spacing: BaseTheme.Spacing.xs) {
+                Text(weekRangeTitle)
+                    .font(Typography.body(weight: .semibold))
+                    .foregroundStyle(Color(.label))
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -133,6 +187,27 @@ struct StatsView: View {
         // weekday: 1=Sun, 2=Mon…7=Sat → convertir a 0=Mon…6=Sun
         let idx = (weekday + 5) % 7
         return idx < weekEntries.count ? idx : nil
+    }
+
+    private var showWeekRangeInToolbar: Bool {
+        let threshold = UIScreen.main.bounds.height * 0.1
+        return -scrollOffset > threshold
+    }
+
+    private var weekRangeTitle: String {
+        let calendar = Calendar.current
+        let days = calendar.weekDays(containing: selectedDate)
+        guard let first = days.first?.date, let last = days.last?.date else { return "" }
+
+        let startDay = calendar.component(.day, from: first)
+        let endDay = calendar.component(.day, from: last)
+
+        let monthFormatter = DateFormatter()
+        monthFormatter.locale = Locale.current
+        monthFormatter.dateFormat = "MMM"
+
+        let month = monthFormatter.string(from: first)
+        return "\(startDay)-\(endDay) \(month)"
     }
 
     // MARK: - Timeline sessions

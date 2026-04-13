@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
+import FamilyControls
+import ManagedSettings
 
 // MARK: - BlockedAppGrid
-
-/// Grid 4 columnas de apps bloqueadas, con AI insight opcional al final.
-/// Construido sobre StatCard para consistencia de estilos.
 
 private let gridColumns = Array(repeating: GridItem(.flexible(), spacing: BaseTheme.Spacing.sm), count: 4)
 
@@ -18,17 +17,83 @@ struct BlockedAppGrid: View {
     let apps: [BlockedApp]
     var insight: String? = nil
     var isLoadingInsight: Bool = false
+    var onAdd: (() -> Void)? = nil
 
     var body: some View {
-        StatCard(
-            pretitle: "Blocked Apps",
-            insight: insight,
-            isLoadingInsight: isLoadingInsight
-        ) {
-            LazyVGrid(columns: gridColumns, spacing: BaseTheme.Spacing.sm) {
-                ForEach(apps) { app in
-                    AppCell(app: app)
-                }
+        if onAdd != nil {
+            StatCard(
+                pretitle: "Blocked Apps",
+                badge: { addButton },
+                content: { grid(apps: apps) },
+                insight: insight,
+                isLoadingInsight: isLoadingInsight
+            )
+        } else {
+            StatCard(
+                pretitle: "Blocked Apps",
+                insight: insight,
+                isLoadingInsight: isLoadingInsight
+            ) { grid(apps: apps) }
+        }
+    }
+
+    private var addButton: some View {
+        Button { onAdd?() } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(.secondaryLabel))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func grid(apps: [BlockedApp]) -> some View {
+        LazyVGrid(columns: gridColumns, spacing: BaseTheme.Spacing.sm) {
+            ForEach(apps) { app in
+                AppCell(token: app.token)
+            }
+        }
+    }
+}
+
+// MARK: - BlockedCategoryGrid
+
+struct BlockedCategoryGrid: View {
+    let categories: [BlockedCategory]
+    var insight: String? = nil
+    var isLoadingInsight: Bool = false
+    var onAdd: (() -> Void)? = nil
+
+    var body: some View {
+        if onAdd != nil {
+            StatCard(
+                pretitle: "Blocked Categories",
+                badge: { addButton },
+                content: { grid(categories: categories) },
+                insight: insight,
+                isLoadingInsight: isLoadingInsight
+            )
+        } else {
+            StatCard(
+                pretitle: "Blocked Categories",
+                insight: insight,
+                isLoadingInsight: isLoadingInsight
+            ) { grid(categories: categories) }
+        }
+    }
+
+    private var addButton: some View {
+        Button { onAdd?() } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(.secondaryLabel))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func grid(categories: [BlockedCategory]) -> some View {
+        LazyVGrid(columns: gridColumns, spacing: BaseTheme.Spacing.sm) {
+            ForEach(categories) { category in
+                CategoryCell(token: category.token)
             }
         }
     }
@@ -37,48 +102,43 @@ struct BlockedAppGrid: View {
 // MARK: - AppCell
 
 private struct AppCell: View {
-    let app: BlockedApp
+    let token: ApplicationToken
 
     var body: some View {
         VStack(spacing: BaseTheme.Spacing.sm) {
-            RoundedRectangle(cornerRadius: BaseTheme.Radius.sm)
-                .fill(Color.innerBackground)
+            Label(token)
+                .labelStyle(.iconOnly)
                 .frame(width: 36, height: 36)
-                .overlay {
-                    Image(systemName: app.iconSymbol)
-                        .font(Typography.caption(weight: .semibold))
-                        .foregroundStyle(Color(.secondaryLabel))
-                }
+                .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.sm))
 
-            Text(app.name)
+            Label(token)
+                .labelStyle(.titleOnly)
                 .font(Typography.micro())
                 .foregroundStyle(Color(.label))
-                .multilineTextAlignment(.center)
                 .lineLimit(1)
         }
         .padding(.vertical, BaseTheme.Spacing.sm)
     }
 }
 
-// MARK: - Preview
+// MARK: - CategoryCell
 
-#Preview {
-    let apps: [BlockedApp] = [
-        .init(name: "Instagram", bundleId: "a", iconSymbol: "camera"),
-        .init(name: "Facebook",  bundleId: "b", iconSymbol: "person.2"),
-        .init(name: "Facebook",  bundleId: "c", iconSymbol: "person.2"),
-        .init(name: "Facebook",  bundleId: "d", iconSymbol: "person.2"),
-        .init(name: "Facebook",  bundleId: "e", iconSymbol: "person.2"),
-        .init(name: "Twitter",   bundleId: "f", iconSymbol: "bird"),
-        .init(name: "LinkedIn",  bundleId: "g", iconSymbol: "briefcase"),
-        .init(name: "TikTok",    bundleId: "h", iconSymbol: "music.note"),
-    ]
-    ScrollView {
-        BlockedAppGrid(
-            apps: apps,
-            insight: "Instagram accounts for 78% of your blocked attempts."
-        )
-        .padding(BaseTheme.Spacing.lg)
+private struct CategoryCell: View {
+    let token: ActivityCategoryToken
+
+    var body: some View {
+        VStack(spacing: BaseTheme.Spacing.sm) {
+            Label(token)
+                .labelStyle(.iconOnly)
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.sm))
+
+            Label(token)
+                .labelStyle(.titleOnly)
+                .font(Typography.micro())
+                .foregroundStyle(Color(.label))
+                .lineLimit(1)
+        }
+        .padding(.vertical, BaseTheme.Spacing.sm)
     }
-    .background(Color.pageBackground)
 }

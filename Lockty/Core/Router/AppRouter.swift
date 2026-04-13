@@ -44,9 +44,31 @@ final class AppRouter {
             // case .social: return "Social"
             }
         }
+
+        var symbol: String {
+            switch self {
+            case .modes: return "house"
+            case .stats: return "chart.xyaxis.line"
+            }
+        }
+
+        var actionSymbol: String {
+            switch self {
+            case .modes: return "plus"
+            case .stats: return "line.3.horizontal.decrease.circle"
+            }
+        }
+
+        var index: Int {
+            Self.allCases.firstIndex(of: self) ?? 0
+        }
     }
 
     // MARK: - Navegación
+    func openCreateMode() {
+        navigation.push(.createMode)
+    }
+
     func editMode(_ mode: Mode) {
         sheet.push(.editMode(modeId: mode.id))
     }

@@ -66,6 +66,15 @@ extension PersistenceController {
             attr("createdAt", .dateAttributeType)
         ]
 
+        // MARK: BlockedAppsEntity
+        let blockedAppsEntity = NSEntityDescription()
+        blockedAppsEntity.name = "BlockedAppsEntity"
+        blockedAppsEntity.managedObjectClassName = NSStringFromClass(BlockedAppsEntity.self)
+        blockedAppsEntity.properties = [
+            attr("modeId", .UUIDAttributeType),
+            attr("selectionData", .binaryDataAttributeType, optional: true)
+        ]
+
         // MARK: SessionEntity
         let sessionEntity = NSEntityDescription()
         sessionEntity.name = "SessionEntity"
@@ -106,7 +115,7 @@ extension PersistenceController {
             attr("syncSessions", .booleanAttributeType)
         ]
 
-        model.entities = [userEntity, modeEntity, sessionEntity, ruleEntity, syncEntity]
+        model.entities = [userEntity, modeEntity, blockedAppsEntity, sessionEntity, ruleEntity, syncEntity]
         return model
     }()
 }
@@ -136,6 +145,16 @@ class ModeEntity: NSManagedObject {
 
     static func fetchRequest() -> NSFetchRequest<ModeEntity> {
         NSFetchRequest<ModeEntity>(entityName: "ModeEntity")
+    }
+}
+
+@objc(BlockedAppsEntity)
+class BlockedAppsEntity: NSManagedObject {
+    @NSManaged var modeId: UUID?
+    @NSManaged var selectionData: Data?
+
+    static func fetchRequest() -> NSFetchRequest<BlockedAppsEntity> {
+        NSFetchRequest<BlockedAppsEntity>(entityName: "BlockedAppsEntity")
     }
 }
 

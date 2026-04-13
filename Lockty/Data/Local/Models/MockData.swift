@@ -8,8 +8,8 @@ extension Mode {
         colorHex: "#FCE8E3", state: ModeState.inactive.rawValue, createdAt: .now
     )
     static let previewActive = Mode(
-        id: UUID(), name: "Deep Work", iconName: "target",
-        colorHex: "#FCE8E3", state: ModeState.active.rawValue, createdAt: .now
+        id: UUID(), name: "University", iconName: "building.columns.fill",
+        colorHex: "#D6EEFF", state: ModeState.active.rawValue, createdAt: .now
     )
     static let previewOnBreak = Mode(
         id: UUID(), name: "Deep Work", iconName: "target",
@@ -25,6 +25,27 @@ extension Mode {
         Mode(id: UUID(), name: "Evening", iconName: "moon.fill",
              colorHex: "#F3E8FF", state: ModeState.inactive.rawValue, createdAt: .now)
     ]
+}
+
+extension ActiveModeRuntimeStatus {
+    static let previewUniversity = ActiveModeRuntimeStatus(
+        elapsedTimeText: "54m",
+        triggerLabel: "NFC at University",
+        blockedAppsSummary: "Instagram + TikTok",
+        rulesSummary: "NFC, location, breaks, min duration",
+        breakPolicy: BreakPolicyStatus(
+            breaksUsed: 1,
+            maxBreaks: 2,
+            maxBreakDurationText: "10m max",
+            minIntervalText: "20m between breaks",
+            nextBreakAvailableInText: "8m"
+        ),
+        finishPolicy: FinishPolicyStatus(
+            canFinish: false,
+            requirementText: "Finish in 6m or leave university to stop manually"
+        ),
+        helperText: "Breaks can only start with the university NFC tag while you are on campus."
+    )
 }
 
 // MARK: - Rule
