@@ -12,7 +12,7 @@ struct CreateRuleSheet: View {
 
     init(modeVM: CreateModeViewModel, preselectedTransition: Transition? = nil) {
         self.modeVM = modeVM
-        var ruleVM = CreateRuleViewModel()
+        let ruleVM = CreateRuleViewModel()
         if let t = preselectedTransition {
             ruleVM.transition = t
             ruleVM.step = .config
@@ -39,6 +39,9 @@ struct CreateRuleSheet: View {
         }
         .padding(.vertical, BaseTheme.Spacing.lg)
         .animation(.snappy(duration: 0.3, extraBounce: 0.02), value: vm.step)
+        .sheet(isPresented: $vm.showLocationPicker) {
+            LocationMapPickerSheet(vm: vm)
+        }
     }
 
     // MARK: - Step 1: Tipo
@@ -188,11 +191,46 @@ struct CreateRuleSheet: View {
 
         case .location:
             VStack(spacing: BaseTheme.Spacing.sm) {
-                TextField("Nombre del lugar", text: $vm.locationName)
-                    .font(Typography.body())
+                // TextField("Nombre del lugar", text: $vm.locationName)
+                //     .font(Typography.body())
+                //     .padding(BaseTheme.Spacing.md)
+                //     .background(Color.cardBackground)
+                //     .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+                Button {
+                    vm.openLocationPicker()
+                } label: {
+                    HStack(spacing: BaseTheme.Spacing.md) {
+                        RoundedRectangle(cornerRadius: BaseTheme.Radius.md)
+                            .fill(Color.innerBackground)
+                            .frame(width: 42, height: 42)
+                            .overlay {
+                                Image(systemName: "map.fill")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(Color(.label))
+                            }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(vm.locationPreviewTitle)
+                                .font(Typography.body(weight: .semibold))
+                                .foregroundStyle(Color(.label))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Text(vm.locationPreviewSubtitle)
+                                .font(Typography.caption())
+                                .foregroundStyle(Color(.secondaryLabel))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .lineLimit(2)
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color(.tertiaryLabel))
+                    }
                     .padding(BaseTheme.Spacing.md)
                     .background(Color.cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+                }
+                .buttonStyle(.plain)
 
                 VStack(alignment: .leading, spacing: BaseTheme.Spacing.xs) {
                     Text("Radio: \(Int(vm.locationRadius))m")
@@ -207,18 +245,6 @@ struct CreateRuleSheet: View {
                     .padding(BaseTheme.Spacing.md)
                     .background(Color.cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
-
-                if let coordinate = vm.locationCoordinate {
-                    Text("Ubicación actual: \(coordinate.latitude.formatted(.number.precision(.fractionLength(4)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(4))))")
-                        .font(Typography.caption())
-                        .foregroundStyle(Color(.secondaryLabel))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Text("Usaremos tu ubicación actual cuando esté disponible.")
-                        .font(Typography.caption())
-                        .foregroundStyle(Color(.secondaryLabel))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
             }
             .padding(.horizontal, BaseTheme.Spacing.lg)
 

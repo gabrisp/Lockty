@@ -5,6 +5,7 @@
 
 import SwiftUI
 import CoreLocation
+import MapKit
 
 enum CreateRuleStep { case type, config }
 
@@ -38,9 +39,11 @@ final class CreateRuleViewModel: NSObject, CLLocationManagerDelegate {
     var nfcTechnology: NFCTagTechnology = .generic
     // Location
     var locationName: String = ""
+    var locationAddress: String = ""
     var locationRadius: Double = 100
     var locationCoordinate: CLLocationCoordinate2D? = nil
     var allowsImmediateManualStopOnExit: Bool = false
+    var showLocationPicker: Bool = false
     // Friend
     var friendNote: String = ""
     // Reminder
@@ -54,7 +57,7 @@ final class CreateRuleViewModel: NSObject, CLLocationManagerDelegate {
         case .nfc:
             return !nfcTagName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .location:
-            return !locationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !locationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && locationCoordinate != nil
         case .friend, .reminder:
             return true
         }
@@ -66,13 +69,42 @@ final class CreateRuleViewModel: NSObject, CLLocationManagerDelegate {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
 
-    private func requestLocationIfNeeded() {
+    func requestLocationIfNeeded() {
         let status = locationManager.authorizationStatus
         if status == .notDetermined {
             locationManager.requestWhenInUseAuthorization()
         } else {
             locationManager.requestLocation()
         }
+    }
+
+    func openLocationPicker() {
+        requestLocationIfNeeded()
+        showLocationPicker = true
+    }
+
+    func applySelectedLocation(name: String, address: String, coordinate: CLLocationCoordinate2D) {
+        locationName = name
+        locationAddress = address
+        locationCoordinate = coordinate
+        showLocationPicker = false
+    }
+
+    var locationPreviewTitle: String {
+        if !locationName.isEmpty {
+            return locationName
+        }
+        return "Seleccionar lugar"
+    }
+
+    var locationPreviewSubtitle: String {
+        if !locationAddress.isEmpty {
+            return locationAddress
+        }
+        if locationCoordinate != nil {
+            return "Lugar seleccionado"
+        }
+        return "Busca y elige un sitio en el mapa"
     }
 
     func buildOutput(modeId: UUID) -> CreateRuleOutput {
