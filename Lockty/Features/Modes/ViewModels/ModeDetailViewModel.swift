@@ -69,6 +69,8 @@ final class ModeDetailViewModel {
     var selectedTab: ModeDetailTab = .overview
     var blockedApps: [BlockedApp] = []
     var blockedCategories: [BlockedCategory] = []
+    var nfcTags: [NFCTag] = []
+    var locationZones: [LocationZone] = []
     var ruleGroups: [RuleGroup] = []
     var blockedAppsInsight: String? = nil
     var rulesInsight: String? = nil
@@ -171,6 +173,49 @@ final class ModeDetailViewModel {
             blockedApps = selection.applicationTokens.map { BlockedApp(token: $0) }
             blockedCategories = selection.categoryTokens.map { BlockedCategory(token: $0) }
         }
+
+        let nfcReq = NFCTagEntity.fetchRequest()
+        nfcReq.predicate = NSPredicate(format: "modeId == %@", id as CVarArg)
+        nfcTags = ((try? ctx.fetch(nfcReq)) ?? []).compactMap { entity in
+            guard
+                let entityID = entity.id,
+                let name = entity.name
+            else { return nil }
+
+            return NFCTag(
+                id: entityID,
+                modeId: entity.modeId,
+                name: name,
+                systemIdentifier: entity.systemIdentifier,
+                technology: NFCTagTechnology(rawValue: entity.technology ?? "") ?? .generic,
+                payload: entity.payload,
+                createdAt: entity.createdAt ?? .now,
+                lastSeenAt: entity.lastSeenAt
+            )
+        }
+
+        let locationReq = LocationZoneEntity.fetchRequest()
+        locationReq.predicate = NSPredicate(format: "modeId == %@", id as CVarArg)
+        locationZones = ((try? ctx.fetch(locationReq)) ?? []).compactMap { entity in
+            guard
+                let entityID = entity.id,
+                let name = entity.name,
+                let triggerRaw = entity.trigger,
+                let trigger = LocationZone.LocationTrigger(rawValue: triggerRaw)
+            else { return nil }
+
+            return LocationZone(
+                id: entityID,
+                modeId: entity.modeId,
+                name: name,
+                latitude: entity.latitude,
+                longitude: entity.longitude,
+                radius: entity.radius,
+                trigger: trigger,
+                allowsImmediateManualStopOnExit: entity.allowsImmediateManualStopOnExit,
+                createdAt: entity.createdAt ?? .now
+            )
+        }
     }
 
     // MARK: - Private
@@ -192,20 +237,21 @@ final class ModeDetailViewModel {
     }
 
     private func participant(id: UUID, conditionType: ConditionType?, conditionConfig: Data?) -> RuleParticipant {
+        let payload = decodedPayload(conditionConfig, conditionType: conditionType)
+
         switch conditionType {
         case .manual:
             return RuleParticipant(id: id, label: "Manual", sublabel: "", accentColor: .blue)
         case .nfc:
-            return RuleParticipant(id: id, label: "NFC", sublabel: "", accentColor: .purple)
+            let tagName = payload.nfc?.tagName ?? nfcTag(id: payload.nfc?.tagId)?.name ?? ""
+            return RuleParticipant(id: id, label: "NFC", sublabel: tagName, accentColor: .purple)
         case .location:
-            let config = decoded(conditionConfig)
-            return RuleParticipant(id: id, label: "Ubicación", sublabel: config["name"] as? String ?? "", accentColor: .orange)
+            let locationName = payload.location?.locationName ?? locationZone(id: payload.location?.locationId)?.name ?? ""
+            return RuleParticipant(id: id, label: "Ubicación", sublabel: locationName, accentColor: .orange)
         case .friend:
-            let config = decoded(conditionConfig)
-            return RuleParticipant(id: id, label: "Amigo", sublabel: config["note"] as? String ?? "", accentColor: .green)
+            return RuleParticipant(id: id, label: "Amigo", sublabel: payload.friend?.note ?? "", accentColor: .green)
         case .reminder:
-            let config = decoded(conditionConfig)
-            let ts = config["time"] as? TimeInterval ?? 0
+            let ts = payload.reminder?.timeIntervalSince1970 ?? 0
             let label = Date(timeIntervalSince1970: ts).formatted(date: .omitted, time: .shortened)
             return RuleParticipant(id: id, label: "Recordatorio", sublabel: label, accentColor: .yellow)
         case nil:
@@ -213,9 +259,52 @@ final class ModeDetailViewModel {
         }
     }
 
-    private func decoded(_ data: Data?) -> [String: Any] {
-        guard let data else { return [:] }
-        return (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+    private func decodedPayload(_ data: Data?, conditionType: ConditionType?) -> RuleConditionConfigPayload {
+        guard let data else { return .manual }
+        if let payload = try? JSONDecoder().decode(RuleConditionConfigPayload.self, from: data) {
+            return payload
+        }
+
+        guard
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let conditionType
+        else {
+            return .manual
+        }
+
+        switch conditionType {
+        case .manual:
+            return .manual
+        case .nfc:
+            return RuleConditionConfigPayload(
+                nfc: NFCConditionConfig(tagName: object["name"] as? String ?? "")
+            )
+        case .location:
+            return RuleConditionConfigPayload(
+                location: LocationConditionConfig(
+                    locationName: object["name"] as? String ?? "",
+                    radius: object["radius"] as? Double ?? 100
+                )
+            )
+        case .friend:
+            return RuleConditionConfigPayload(
+                friend: FriendConditionConfig(note: object["note"] as? String ?? "")
+            )
+        case .reminder:
+            return RuleConditionConfigPayload(
+                reminder: ReminderConditionConfig(timeIntervalSince1970: object["time"] as? TimeInterval ?? 0)
+            )
+        }
+    }
+
+    private func nfcTag(id: UUID?) -> NFCTag? {
+        guard let id else { return nil }
+        return nfcTags.first { $0.id == id }
+    }
+
+    private func locationZone(id: UUID?) -> LocationZone? {
+        guard let id else { return nil }
+        return locationZones.first { $0.id == id }
     }
 
     private func fetchMode(id: UUID) -> Mode? {

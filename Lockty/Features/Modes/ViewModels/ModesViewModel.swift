@@ -69,30 +69,36 @@ final class ModesViewModel {
         case .manual:
             activateMode(mode.id)
         case .nfc:
+            let payload = firstRule.typedConditionConfig
+            let tagName = payload.nfc?.tagName
             activationPrompt = ModeActivationPrompt(
                 title: "NFC required",
-                message: "This mode starts by tapping its NFC tag.",
+                message: tagName?.isEmpty == false
+                    ? "This mode starts by tapping the NFC tag “\(tagName!)”."
+                    : "This mode starts by tapping its NFC tag.",
                 icon: "wave.3.right"
             )
         case .location:
-            let config = decoded(firstRule.conditionConfig)
-            let place = config["name"] as? String ?? "this location"
+            let payload = firstRule.typedConditionConfig
+            let place = payload.location?.locationName.isEmpty == false
+                ? payload.location?.locationName
+                : "this location"
             activationPrompt = ModeActivationPrompt(
                 title: "Location needed",
-                message: "You are not in \(place) right now.",
+                message: "You are not in \(place ?? "this location") right now.",
                 icon: "location"
             )
         case .friend:
-            let config = decoded(firstRule.conditionConfig)
-            let note = config["note"] as? String
+            let payload = firstRule.typedConditionConfig
+            let note = payload.friend?.note
             activationPrompt = ModeActivationPrompt(
                 title: "Friend trigger",
                 message: note?.isEmpty == false ? note! : "This mode can only be started by a friend trigger.",
                 icon: "person.2"
             )
         case .reminder:
-            let config = decoded(firstRule.conditionConfig)
-            let ts = config["time"] as? TimeInterval ?? 0
+            let payload = firstRule.typedConditionConfig
+            let ts = payload.reminder?.timeIntervalSince1970 ?? 0
             let time = Date(timeIntervalSince1970: ts).formatted(date: .omitted, time: .shortened)
             activationPrompt = ModeActivationPrompt(
                 title: "Scheduled mode",
@@ -145,10 +151,6 @@ final class ModesViewModel {
                 isActive: entity.isActive
             )
         }
-    }
-
-    private func decoded(_ data: Data) -> [String: Any] {
-        (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
     }
 
     private func runtimeStatus(for mode: Mode) -> ActiveModeRuntimeStatus {

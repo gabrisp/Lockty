@@ -15,6 +15,8 @@ final class CreateModeViewModel {
     var iconName: String = "target"
     var colorHex: String = "#FCE8E3"
     var rules: [Rule] = []
+    var nfcTags: [NFCTag] = []
+    var locationZones: [LocationZone] = []
     var blockedApps: FamilyActivitySelection = .init()
 
     // Sub-sheet visibility
@@ -79,6 +81,49 @@ final class CreateModeViewModel {
                 isActive: entity.isActive
             )
         }
+
+        let nfcReq = NFCTagEntity.fetchRequest()
+        nfcReq.predicate = NSPredicate(format: "modeId == %@", modeId as CVarArg)
+        nfcTags = ((try? ctx.fetch(nfcReq)) ?? []).compactMap { entity in
+            guard
+                let id = entity.id,
+                let name = entity.name
+            else { return nil }
+
+            return NFCTag(
+                id: id,
+                modeId: entity.modeId,
+                name: name,
+                systemIdentifier: entity.systemIdentifier,
+                technology: NFCTagTechnology(rawValue: entity.technology ?? "") ?? .generic,
+                payload: entity.payload,
+                createdAt: entity.createdAt ?? .now,
+                lastSeenAt: entity.lastSeenAt
+            )
+        }
+
+        let locationReq = LocationZoneEntity.fetchRequest()
+        locationReq.predicate = NSPredicate(format: "modeId == %@", modeId as CVarArg)
+        locationZones = ((try? ctx.fetch(locationReq)) ?? []).compactMap { entity in
+            guard
+                let id = entity.id,
+                let name = entity.name,
+                let triggerRaw = entity.trigger,
+                let trigger = LocationZone.LocationTrigger(rawValue: triggerRaw)
+            else { return nil }
+
+            return LocationZone(
+                id: id,
+                modeId: entity.modeId,
+                name: name,
+                latitude: entity.latitude,
+                longitude: entity.longitude,
+                radius: entity.radius,
+                trigger: trigger,
+                allowsImmediateManualStopOnExit: entity.allowsImmediateManualStopOnExit,
+                createdAt: entity.createdAt ?? .now
+            )
+        }
     }
 
     func save() throws {
@@ -104,6 +149,14 @@ final class CreateModeViewModel {
         blockedEntity.modeId = id
         blockedEntity.selectionData = try? JSONEncoder().encode(blockedApps)
 
+        let existingNFCTagReq = NFCTagEntity.fetchRequest()
+        existingNFCTagReq.predicate = NSPredicate(format: "modeId == %@", id as CVarArg)
+        for old in (try? ctx.fetch(existingNFCTagReq)) ?? [] { ctx.delete(old) }
+
+        let existingLocationReq = LocationZoneEntity.fetchRequest()
+        existingLocationReq.predicate = NSPredicate(format: "modeId == %@", id as CVarArg)
+        for old in (try? ctx.fetch(existingLocationReq)) ?? [] { ctx.delete(old) }
+
         // Reemplazar rules
         let existingRuleReq = RuleEntity.fetchRequest()
         existingRuleReq.predicate = NSPredicate(format: "modeId == %@", id as CVarArg)
@@ -119,6 +172,31 @@ final class CreateModeViewModel {
             ruleEntity.guardLogic = rule.guardLogic
             ruleEntity.onGuardFail = rule.onGuardFail
             ruleEntity.isActive = rule.isActive
+        }
+
+        for tag in nfcTags {
+            let entity = NFCTagEntity(context: ctx)
+            entity.id = tag.id
+            entity.modeId = id
+            entity.name = tag.name
+            entity.systemIdentifier = tag.systemIdentifier
+            entity.technology = tag.technology.rawValue
+            entity.payload = tag.payload
+            entity.createdAt = tag.createdAt
+            entity.lastSeenAt = tag.lastSeenAt
+        }
+
+        for zone in locationZones {
+            let entity = LocationZoneEntity(context: ctx)
+            entity.id = zone.id
+            entity.modeId = id
+            entity.name = zone.name
+            entity.latitude = zone.latitude
+            entity.longitude = zone.longitude
+            entity.radius = zone.radius
+            entity.trigger = zone.trigger.rawValue
+            entity.allowsImmediateManualStopOnExit = zone.allowsImmediateManualStopOnExit
+            entity.createdAt = zone.createdAt
         }
 
         try ctx.save()

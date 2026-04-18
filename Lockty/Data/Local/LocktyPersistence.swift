@@ -106,6 +106,37 @@ extension PersistenceController {
             attr("isActive", .booleanAttributeType)
         ]
 
+        // MARK: NFCTagEntity
+        let nfcTagEntity = NSEntityDescription()
+        nfcTagEntity.name = "NFCTagEntity"
+        nfcTagEntity.managedObjectClassName = NSStringFromClass(NFCTagEntity.self)
+        nfcTagEntity.properties = [
+            attr("id", .UUIDAttributeType),
+            attr("modeId", .UUIDAttributeType, optional: true),
+            attr("name", .stringAttributeType),
+            attr("systemIdentifier", .stringAttributeType, optional: true),
+            attr("technology", .stringAttributeType),
+            attr("payload", .binaryDataAttributeType, optional: true),
+            attr("createdAt", .dateAttributeType),
+            attr("lastSeenAt", .dateAttributeType, optional: true)
+        ]
+
+        // MARK: LocationZoneEntity
+        let locationZoneEntity = NSEntityDescription()
+        locationZoneEntity.name = "LocationZoneEntity"
+        locationZoneEntity.managedObjectClassName = NSStringFromClass(LocationZoneEntity.self)
+        locationZoneEntity.properties = [
+            attr("id", .UUIDAttributeType),
+            attr("modeId", .UUIDAttributeType, optional: true),
+            attr("name", .stringAttributeType),
+            attr("latitude", .doubleAttributeType),
+            attr("longitude", .doubleAttributeType),
+            attr("radius", .doubleAttributeType),
+            attr("trigger", .stringAttributeType),
+            attr("allowsImmediateManualStopOnExit", .booleanAttributeType),
+            attr("createdAt", .dateAttributeType)
+        ]
+
         // MARK: SyncSettingsEntity
         let syncEntity = NSEntityDescription()
         syncEntity.name = "SyncSettingsEntity"
@@ -115,7 +146,16 @@ extension PersistenceController {
             attr("syncSessions", .booleanAttributeType)
         ]
 
-        model.entities = [userEntity, modeEntity, blockedAppsEntity, sessionEntity, ruleEntity, syncEntity]
+        model.entities = [
+            userEntity,
+            modeEntity,
+            blockedAppsEntity,
+            sessionEntity,
+            ruleEntity,
+            nfcTagEntity,
+            locationZoneEntity,
+            syncEntity
+        ]
         return model
     }()
 }
@@ -188,6 +228,39 @@ class RuleEntity: NSManagedObject {
 
     static func fetchRequest() -> NSFetchRequest<RuleEntity> {
         NSFetchRequest<RuleEntity>(entityName: "RuleEntity")
+    }
+}
+
+@objc(NFCTagEntity)
+class NFCTagEntity: NSManagedObject {
+    @NSManaged var id: UUID?
+    @NSManaged var modeId: UUID?
+    @NSManaged var name: String?
+    @NSManaged var systemIdentifier: String?
+    @NSManaged var technology: String?
+    @NSManaged var payload: Data?
+    @NSManaged var createdAt: Date?
+    @NSManaged var lastSeenAt: Date?
+
+    static func fetchRequest() -> NSFetchRequest<NFCTagEntity> {
+        NSFetchRequest<NFCTagEntity>(entityName: "NFCTagEntity")
+    }
+}
+
+@objc(LocationZoneEntity)
+class LocationZoneEntity: NSManagedObject {
+    @NSManaged var id: UUID?
+    @NSManaged var modeId: UUID?
+    @NSManaged var name: String?
+    @NSManaged var latitude: Double
+    @NSManaged var longitude: Double
+    @NSManaged var radius: Double
+    @NSManaged var trigger: String?
+    @NSManaged var allowsImmediateManualStopOnExit: Bool
+    @NSManaged var createdAt: Date?
+
+    static func fetchRequest() -> NSFetchRequest<LocationZoneEntity> {
+        NSFetchRequest<LocationZoneEntity>(entityName: "LocationZoneEntity")
     }
 }
 

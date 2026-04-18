@@ -135,8 +135,16 @@ struct CreateRuleSheet: View {
 
             // Botón añadir
             PrimaryButton(isDisabled: !vm.canSave) {
-                let rule = vm.buildRule(modeId: UUID())
-                modeVM.rules.append(rule)
+                let output = vm.buildOutput(modeId: UUID())
+                modeVM.rules.append(output.rule)
+                if let nfcTag = output.nfcTag {
+                    modeVM.nfcTags.removeAll { $0.id == nfcTag.id }
+                    modeVM.nfcTags.append(nfcTag)
+                }
+                if let locationZone = output.locationZone {
+                    modeVM.locationZones.removeAll { $0.id == locationZone.id }
+                    modeVM.locationZones.append(locationZone)
+                }
                 dismiss()
             } label: {
                 Text("Añadir regla")
@@ -158,10 +166,25 @@ struct CreateRuleSheet: View {
                 .padding(.horizontal, BaseTheme.Spacing.lg)
 
         case .nfc:
-            Text("Se activa al acercar un tag NFC.")
+            VStack(spacing: BaseTheme.Spacing.sm) {
+                TextField("Nombre del tag NFC", text: $vm.nfcTagName)
+                    .font(Typography.body())
+                    .padding(BaseTheme.Spacing.md)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+
+                Picker("Tecnología", selection: $vm.nfcTechnology) {
+                    ForEach(NFCTagTechnology.allCases, id: \.self) { technology in
+                        Text(labelForTechnology(technology)).tag(technology)
+                    }
+                }
+                .pickerStyle(.menu)
                 .font(Typography.body())
-                .foregroundStyle(Color(.secondaryLabel))
-                .padding(.horizontal, BaseTheme.Spacing.lg)
+                .padding(BaseTheme.Spacing.md)
+                .background(Color.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+            }
+            .padding(.horizontal, BaseTheme.Spacing.lg)
 
         case .location:
             VStack(spacing: BaseTheme.Spacing.sm) {
@@ -177,6 +200,24 @@ struct CreateRuleSheet: View {
                         .foregroundStyle(Color(.secondaryLabel))
                     Slider(value: $vm.locationRadius, in: 50...1000, step: 50)
                         .tint(Color(.label))
+                }
+
+                Toggle("Permitir parar manualmente si sales de esta zona", isOn: $vm.allowsImmediateManualStopOnExit)
+                    .font(Typography.body())
+                    .padding(BaseTheme.Spacing.md)
+                    .background(Color.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+
+                if let coordinate = vm.locationCoordinate {
+                    Text("Ubicación actual: \(coordinate.latitude.formatted(.number.precision(.fractionLength(4)))), \(coordinate.longitude.formatted(.number.precision(.fractionLength(4))))")
+                        .font(Typography.caption())
+                        .foregroundStyle(Color(.secondaryLabel))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text("Usaremos tu ubicación actual cuando esté disponible.")
+                        .font(Typography.caption())
+                        .foregroundStyle(Color(.secondaryLabel))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .padding(.horizontal, BaseTheme.Spacing.lg)
@@ -226,6 +267,17 @@ struct CreateRuleSheet: View {
         case .activate:   return "Activar"
         case .startBreak: return "Pausa"
         case .stop:       return "Detener"
+        }
+    }
+
+    private func labelForTechnology(_ technology: NFCTagTechnology) -> String {
+        switch technology {
+        case .generic:  return "Generic"
+        case .ndef:     return "NDEF"
+        case .miFare:   return "MIFARE"
+        case .iso7816:  return "ISO 7816"
+        case .iso15693: return "ISO 15693"
+        case .felica:   return "FeliCa"
         }
     }
 }
