@@ -126,7 +126,7 @@ private struct RuleGroupRow: View {
                         }
                     }
 
-                    if let onAdd {
+                    if let onAdd = onAdd {
                         ToolbarButton(icon: "plus", size: 40, iconSize: 13, action: onAdd)
                     }
                 }
@@ -200,3 +200,4 @@ private struct RuleParticipantChip: View {
     }
     .background(Color.pageBackground)
 }
+

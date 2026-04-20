@@ -105,19 +105,20 @@ private struct AppCell: View {
     let token: ApplicationToken
 
     var body: some View {
-        VStack(spacing: BaseTheme.Spacing.sm) {
-            Label(token)
-                .labelStyle(.iconOnly)
-                .frame(width: 36, height: 36)
-                .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.sm))
+        Label(token)
+            .labelStyle(AppIconLabelStyle())
+            .padding(.vertical, BaseTheme.Spacing.sm)
+    }
+}
 
-            Label(token)
-                .labelStyle(.titleOnly)
-                .font(Typography.micro())
-                .foregroundStyle(Color(.label))
-                .lineLimit(1)
-        }
-        .padding(.vertical, BaseTheme.Spacing.sm)
+struct AppIconLabelStyle: LabelStyle {
+    var size: CGFloat = 48
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.icon
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.2224))
     }
 }
 

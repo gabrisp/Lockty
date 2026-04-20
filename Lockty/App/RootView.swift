@@ -17,13 +17,17 @@ struct RootView: View {
         @Bindable var router = router
 
         NavigationStack(path: $router.navigation.path) {
-            ZStack(alignment: .top) {
+               
                 TabContainerView()
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        bottomTabBar
-                    }
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationBarBackButtonHidden(true)
+                .overlay(alignment: .topLeading, content: {
+                    CustomToolbar(title: "Mi Vista") {
+                            print("botón tapped")
+                        }
+                })
+                  //  .safeAreaInset(edge: .bottom, spacing: 0) {
+                //        bottomTabBar
+                //    }
+                   
                     .toolbar(.hidden, for: .navigationBar)
                     .navigationDestination(for: NavigationDestination.self) { dest in
                         switch dest {
@@ -34,8 +38,7 @@ struct RootView: View {
                         case .modeDetail(let mode):
                             ModeDetailView(mode: mode)
                                 .environment(router)
-                                .navigationTransition(.zoom(sourceID: mode.id, in: modeZoom))
-                                .navigationBarBackButtonHidden(true)
+                               // .navigationTransition(.zoom(sourceID: mode.id, in: modeZoom))
 
                         case .createMode:
                             ModeDetailView()
@@ -46,30 +49,30 @@ struct RootView: View {
                     .environment(\.modeZoomNamespace, modeZoom)
 
                 // Blur overlay
-                GeometryReader { geo in
-                    VariableBlurView(maxBlurRadius: 16, direction: .blurredTopClearBottom)
-                        .frame(height: 54 + geo.safeAreaInsets.top + 8)
-                        .ignoresSafeArea()
-                        .allowsHitTesting(false)
-                }
-                .frame(height: 0)
+          //      GeometryReader { geo in
+                //    VariableBlurView(maxBlurRadius: 16, direction: .blurredTopClearBottom)
+                 //       .frame(height: 54 + geo.safeAreaInsets.top + 8)
+                 //       .ignoresSafeArea()
+               //         .allowsHitTesting(false)
+            //    }
+          //      .frame(height: 0)
 
                 // Header flotante
                 // LocktyToolbar(selectedTab: $router.selectedTab, user: router.currentUser ?? .preview) {
                 //     router.openSettings()
                 // }
                 // .padding(.top, 8)
-                LocktyToolbar(
-                    selectedTab: $router.selectedTab,
-                    user: router.currentUser ?? .preview,
-                    leadingContent: mainToolbarStore.leadingContent
-                ) {
-                    router.openSettings()
-                }
-                .padding(.top, 8)
-            }
+            //    LocktyToolbar(
+                //    selectedTab: $router.selectedTab,
+             //       user: router.currentUser ?? .preview,
+              //      leadingContent: mainToolbarStore.leadingContent
+            //    ) {
+            //        router.openSettings()
+            //    }
+            //    .padding(.top, 8)
             .environment(mainToolbarStore)
         }
+        
         .sheet(item: Binding(
             get: { router.sheet.stack.first },
             set: { if $0 == nil { router.sheet.popToRoot() } }
@@ -108,6 +111,7 @@ struct RootView: View {
                         }
                         .frame(width: tabBarWidth, height: 55)
                     }
+                    .frame(width: tabBarWidth)
                 }
                 .frame(height: 55)
 
@@ -129,11 +133,12 @@ struct RootView: View {
 
                 Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, BaseTheme.Spacing.lg)
-            .padding(.bottom, BaseTheme.Spacing.md)
+            .padding(.bottom, BaseTheme.Spacing.xs)
             .background(.clear)
         }
-        .frame(height: 80)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 }
 

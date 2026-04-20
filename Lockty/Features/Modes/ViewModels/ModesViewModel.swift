@@ -108,14 +108,23 @@ final class ModesViewModel {
         }
     }
 
+    func finishActiveMode() {
+        guard let activeMode else { return }
+        updateModeState(modeID: activeMode.id, newState: .inactive)
+    }
+
     private func activateMode(_ modeID: UUID) {
+        updateModeState(modeID: modeID, newState: .active)
+    }
+
+    private func updateModeState(modeID: UUID, newState: ModeState) {
         let ctx = PersistenceController.shared.context
         let req = ModeEntity.fetchRequest()
         let entities = (try? ctx.fetch(req)) ?? []
 
         for entity in entities {
             guard let id = entity.id else { continue }
-            entity.state = (id == modeID) ? ModeState.active.rawValue : ModeState.inactive.rawValue
+            entity.state = (id == modeID) ? newState.rawValue : ModeState.inactive.rawValue
         }
 
         try? ctx.save()

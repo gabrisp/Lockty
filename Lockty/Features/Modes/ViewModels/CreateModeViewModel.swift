@@ -21,7 +21,6 @@ final class CreateModeViewModel {
 
     // Sub-sheet visibility
     var showIconPicker: Bool = false
-    var showColorPicker: Bool = false
     var showScreenTimePicker: Bool = false
     var showCreateRule: Bool = false
     var preselectedTransition: Transition? = nil

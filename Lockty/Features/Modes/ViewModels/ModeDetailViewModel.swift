@@ -74,6 +74,7 @@ final class ModeDetailViewModel {
     var ruleGroups: [RuleGroup] = []
     var blockedAppsInsight: String? = nil
     var rulesInsight: String? = nil
+    var activationPrompt: ModeActivationPrompt? = nil
 
     var isEditing: Bool = false
     var editVM: CreateModeViewModel? = nil
@@ -81,6 +82,7 @@ final class ModeDetailViewModel {
 
     /// true cuando es modo nuevo (creación)
     var isNew: Bool { mode == nil }
+    var isModeActive: Bool { mode?.state == ModeState.active.rawValue }
 
     enum ModeDetailTab: String, CaseIterable {
         case overview = "Overview"
@@ -125,6 +127,69 @@ final class ModeDetailViewModel {
         if isNew { return } // en modo nuevo no se puede cancelar sin pop
         editVM = nil
         withAnimation(.snappy(duration: 0.3)) { isEditing = false }
+    }
+
+    func refreshModeState() {
+        guard let mode else { return }
+        self.mode = fetchMode(id: mode.id) ?? mode
+        loadData(for: mode.id)
+    }
+
+    func handlePlay() {
+        guard let mode else { return }
+        let activateRules = rules(for: mode.id, transition: .activate)
+
+        guard let firstRule = activateRules.first else {
+            activationPrompt = ModeActivationPrompt(
+                title: "No activation rule",
+                message: "Add an activation rule before starting this mode.",
+                icon: "exclamationmark.circle"
+            )
+            return
+        }
+
+        guard let conditionType = ConditionType(rawValue: firstRule.conditionType) else { return }
+
+        switch conditionType {
+        case .manual:
+            updateModeState(modeID: mode.id, newState: .active)
+        case .nfc:
+            let tagName = firstRule.typedConditionConfig.nfc?.tagName
+            activationPrompt = ModeActivationPrompt(
+                title: "NFC required",
+                message: tagName?.isEmpty == false
+                    ? "This mode starts by tapping the NFC tag “\(tagName!)”."
+                    : "This mode starts by tapping its NFC tag.",
+                icon: "wave.3.right"
+            )
+        case .location:
+            let place = firstRule.typedConditionConfig.location?.locationName ?? "this location"
+            activationPrompt = ModeActivationPrompt(
+                title: "Location needed",
+                message: "You need to be in \(place) before this mode can start.",
+                icon: "location"
+            )
+        case .friend:
+            let note = firstRule.typedConditionConfig.friend?.note
+            activationPrompt = ModeActivationPrompt(
+                title: "Friend trigger",
+                message: note?.isEmpty == false ? note! : "This mode can only be started by a friend trigger.",
+                icon: "person.2"
+            )
+        case .reminder:
+            let ts = firstRule.typedConditionConfig.reminder?.timeIntervalSince1970 ?? 0
+            let time = Date(timeIntervalSince1970: ts).formatted(date: .omitted, time: .shortened)
+            activationPrompt = ModeActivationPrompt(
+                title: "Scheduled mode",
+                message: "This mode starts from its reminder at \(time).",
+                icon: "bell"
+            )
+        }
+    }
+
+    func finishMode() {
+        guard let mode else { return }
+        updateModeState(modeID: mode.id, newState: .inactive)
     }
 
     func deleteMode() {
@@ -305,6 +370,51 @@ final class ModeDetailViewModel {
     private func locationZone(id: UUID?) -> LocationZone? {
         guard let id else { return nil }
         return locationZones.first { $0.id == id }
+    }
+
+    private func rules(for modeID: UUID, transition: Transition) -> [Rule] {
+        let ctx = PersistenceController.shared.context
+        let req = RuleEntity.fetchRequest()
+        req.predicate = NSPredicate(
+            format: "modeId == %@ AND transition == %@ AND isActive == YES",
+            modeID as CVarArg,
+            transition.rawValue
+        )
+
+        let entities = (try? ctx.fetch(req)) ?? []
+        return entities.compactMap { entity in
+            guard let id = entity.id,
+                  let mid = entity.modeId,
+                  let transition = entity.transition,
+                  let conditionType = entity.conditionType,
+                  let guardLogic = entity.guardLogic,
+                  let onGuardFail = entity.onGuardFail else { return nil }
+
+            return Rule(
+                id: id,
+                modeId: mid,
+                transition: transition,
+                conditionType: conditionType,
+                conditionConfig: entity.conditionConfig ?? Data(),
+                guardLogic: guardLogic,
+                onGuardFail: onGuardFail,
+                isActive: entity.isActive
+            )
+        }
+    }
+
+    private func updateModeState(modeID: UUID, newState: ModeState) {
+        let ctx = PersistenceController.shared.context
+        let req = ModeEntity.fetchRequest()
+        let entities = (try? ctx.fetch(req)) ?? []
+
+        for entity in entities {
+            guard let id = entity.id else { continue }
+            entity.state = (id == modeID) ? newState.rawValue : ModeState.inactive.rawValue
+        }
+
+        try? ctx.save()
+        refreshModeState()
     }
 
     private func fetchMode(id: UUID) -> Mode? {

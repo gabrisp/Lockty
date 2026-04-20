@@ -20,45 +20,91 @@ struct IconPickerSheet: View {
         "house.fill", "building.2.fill", "graduationcap.fill", "briefcase.fill", "stethoscope"
     ]
 
-    private let columns = [GridItem(.adaptive(minimum: 60), spacing: BaseTheme.Spacing.sm)]
+    private let colors: [(String, String)] = [
+        ("Rosa",       "#FCE8E3"),
+        ("Melocotón",  "#FFE5CC"),
+        ("Amarillo",   "#FFF3CC"),
+        ("Lima",       "#E8F5E9"),
+        ("Menta",      "#D4F1E4"),
+        ("Cielo",      "#D6EEFF"),
+        ("Lavanda",    "#E8E0FF"),
+        ("Lila",       "#F3D6FF"),
+        ("Gris claro", "#F2F2F7"),
+        ("Pizarra",    "#E5E7EB"),
+        ("Carbón",     "#2C2C2E"),
+        ("Negro",      "#1C1C1E"),
+    ]
+
+    private let cols = Array(repeating: GridItem(.flexible(), spacing: BaseTheme.Spacing.xs), count: 9)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: BaseTheme.Spacing.md) {
-            Text("Icono")
-                .font(Typography.title())
-                .foregroundStyle(Color(.label))
-                .padding(.horizontal, BaseTheme.Spacing.lg)
+        VStack(alignment: .leading, spacing: BaseTheme.Spacing.lg) {
+            // MARK: Iconos
+            VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
+                Text("Icono")
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+                    .padding(.horizontal, BaseTheme.Spacing.lg)
 
-            LazyVGrid(columns: columns, spacing: BaseTheme.Spacing.sm) {
-                ForEach(icons, id: \.self) { icon in
-                    Button {
-                        vm.iconName = icon
-                        dismiss()
-                    } label: {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: BaseTheme.Radius.lg)
-                                .fill(vm.iconName == icon ? Color(hex: vm.colorHex) : Color.cardBackground)
-                                .frame(width: 60, height: 60)
-                            Image(systemName: icon)
-                                .font(.system(size: 24, weight: .medium))
-                                .foregroundStyle(vm.iconName == icon
-                                    ? (Color(hex: vm.colorHex).isDark ? .white : .black)
-                                    : Color(.label))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHGrid(rows: Array(repeating: GridItem(.flexible(), spacing: BaseTheme.Spacing.xs), count: 4), spacing: BaseTheme.Spacing.xs) {
+                        ForEach(icons, id: \.self) { icon in
+                            Button {
+                                vm.iconName = icon
+                            } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: BaseTheme.Radius.md)
+                                        .fill(vm.iconName == icon ? Color(hex: vm.colorHex) : Color.cardBackground)
+                                        .frame(width: 52, height: 52)
+                                    Image(systemName: icon)
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundStyle(vm.iconName == icon
+                                            ? Color(hex: vm.colorHex).contrastingLabel
+                                            : Color(.label))
+                                }
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, BaseTheme.Spacing.lg)
                 }
             }
-            .padding(.horizontal, BaseTheme.Spacing.lg)
+
+            Divider()
+                .padding(.horizontal, BaseTheme.Spacing.lg)
+
+            // MARK: Colores
+            VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
+                Text("Color")
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+                    .padding(.horizontal, BaseTheme.Spacing.lg)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHGrid(rows: Array(repeating: GridItem(.flexible(), spacing: BaseTheme.Spacing.xs), count: 2), spacing: BaseTheme.Spacing.xs) {
+                        ForEach(colors, id: \.1) { name, hex in
+                            Button {
+                                vm.colorHex = hex
+                            } label: {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: BaseTheme.Radius.md)
+                                        .fill(Color(hex: hex))
+                                        .frame(width: 52, height: 52)
+                                    if vm.colorHex == hex {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundStyle(Color(hex: hex).isDark ? .white : .black)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, BaseTheme.Spacing.lg)
+                }
+            }
         }
-        .padding(.vertical, BaseTheme.Spacing.lg)
+        .padding(.vertical, BaseTheme.Spacing.md)
     }
 }
 
-private extension Color {
-    var isDark: Bool {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        UIColor(self).getRed(&r, green: &g, blue: &b, alpha: nil)
-        return (0.299 * r + 0.587 * g + 0.114 * b) < 0.5
-    }
-}

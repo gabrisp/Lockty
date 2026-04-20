@@ -79,7 +79,7 @@ struct ModesView: View {
                         mode: mode,
                         status: status,
                         onBreak: {},
-                        onFinish: {}
+                        onFinish: vm.finishActiveMode
                     )
                 }
 
@@ -110,8 +110,6 @@ struct ModesView: View {
                                 subtitle: ""
                             ) {
                                 router.navigation.push(.modeDetail(mode: mode))
-                            } onPlay: {
-                                vm.handlePlay(for: mode)
                             }
                             .ifLet(zoomNamespace) { view, ns in
                                 view.matchedTransitionSource(id: mode.id, in: ns) {

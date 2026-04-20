@@ -19,7 +19,6 @@ struct ModeDetailView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
             ScrollView(.vertical) {
                 VStack(spacing: BaseTheme.Spacing.lg) {
 
@@ -27,100 +26,25 @@ struct ModeDetailView: View {
                     hero
                         .padding(.horizontal, BaseTheme.Spacing.lg)
 
-                    Picker("", selection: $vm.selectedTab) {
-                        ForEach(ModeDetailViewModel.ModeDetailTab.allCases, id: \.self) { tab in
-                            Text(tab.rawValue).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, BaseTheme.Spacing.lg)
-
                     // MARK: Contenido
-                    switch vm.selectedTab {
-                    case .overview:
                         restrictionsSection
                         rulesSection
-                    case .stats:
-                        Text("Stats coming soon")
-                            .font(Typography.caption())
-                            .foregroundStyle(Color(.secondaryLabel))
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, BaseTheme.Spacing.xxl)
-                            .padding(.horizontal, BaseTheme.Spacing.lg)
-                }
+                
+                
                 }
                 .padding(.top, 54 + BaseTheme.Spacing.md)
                 .padding(.bottom, 100)
             }
             .scrollIndicators(.hidden)
             .background(Color.pageBackground.ignoresSafeArea())
-
-            // Blur overlay
-            GeometryReader { geo in
-                VariableBlurView(maxBlurRadius: 16, direction: .blurredTopClearBottom)
-                    .frame(height: 54 + geo.safeAreaInsets.top + 8)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-            }
-            .frame(height: 0)
-
-            // Toolbar flotante
-            GlassEffectContainer(spacing: 10) {
-                HStack(spacing: 10) {
-                    ToolbarButton(icon: "chevron.left") {
-                        router.navigation.pop()
-                    }
-
-                    Spacer()
-
-                    if vm.isEditing {
-                        if !vm.isNew {
-                            ToolbarButton(icon: "xmark") { vm.cancelEdit() }
-                        }
-                        ToolbarButton(icon: "checkmark") {
-                            try? vm.saveEdit()
-                            if vm.isNew { router.navigation.pop() }
-                        }
-                    } else {
-                        Menu {
-                            Button { vm.startEditing() } label: {
-                                Label("Editar", systemImage: "pencil")
-                            }
-                            Button(role: .destructive) {
-                                vm.showDeleteAlert = true
-                            } label: {
-                                Label("Eliminar", systemImage: "trash")
-                            }
-                        } label: {
-                            Circle()
-                                .foregroundStyle(.clear)
-                                .frame(width: 50, height: 50)
-                                .overlay {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(Color(.label))
-                                }
-                        }
-                    }
+            .overlay(alignment: .topLeading, content: {
+                CustomToolbar(title: vm.mode?.name ?? "Mode") {
+                    router.navigation.pop()
                 }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(BaseTheme.Spacing.md)
-            .animation(.smooth(duration: 0.5), value: vm.isEditing)
+            })
+        .onAppear {
+            vm.refreshModeState()
         }
-        .navigationBarBackButtonHidden()
-        .offset(y: max(dragOffset, 0))
-        .gesture(
-            DragGesture()
-                .onChanged { value in dragOffset = value.translation.height }
-                .onEnded { value in
-                    if value.translation.height > 100 || value.predictedEndTranslation.height > 220 {
-                        router.navigation.pop()
-                    } else {
-                        withAnimation(.spring(duration: 0.3)) { dragOffset = 0 }
-                    }
-                }
-        )
         .alert("Eliminar modo", isPresented: $vm.showDeleteAlert) {
             Button("Eliminar", role: .destructive) {
                 vm.deleteMode()
@@ -130,17 +54,19 @@ struct ModeDetailView: View {
         } message: {
             Text("Esta acción no se puede deshacer.")
         }
+        .sheet(item: $vm.activationPrompt) { prompt in
+            DynamicSheet {
+                detailPromptSheet(prompt: prompt)
+            }
+        }
         .sheet(isPresented: Binding(
             get: { vm.editVM?.showIconPicker ?? false },
             set: { vm.editVM?.showIconPicker = $0 }
         )) {
-            if let editVM = vm.editVM { DynamicSheet { IconPickerSheet(vm: editVM) } }
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.editVM?.showColorPicker ?? false },
-            set: { vm.editVM?.showColorPicker = $0 }
-        )) {
-            if let editVM = vm.editVM { DynamicSheet { ColorPickerSheet(vm: editVM) } }
+            if let editVM = vm.editVM {
+                DynamicSheet { IconColorPickerSheet(vm: editVM) }
+                    .presentationDragIndicator(.hidden)
+            }
         }
         .sheet(isPresented: Binding(
             get: { vm.editVM?.showCreateRule ?? false },
@@ -171,7 +97,7 @@ struct ModeDetailView: View {
     // MARK: - Hero
 
     private var hero: some View {
-        VStack(spacing: BaseTheme.Spacing.sm) {
+        VStack(spacing: BaseTheme.Spacing.md) {
             Button {
                 guard vm.isEditing else { return }
                 vm.editVM?.showIconPicker = true
@@ -182,41 +108,52 @@ struct ModeDetailView: View {
                     .overlay {
                         Image(systemName: vm.editVM?.iconName ?? vm.mode?.iconName ?? "target")
                             .font(.system(size: 34, weight: .medium))
-                            .foregroundStyle(Color(.label))
+                            .foregroundStyle(Color(hex: vm.editVM?.colorHex ?? vm.mode?.colorHex ?? "#FCE8E3").contrastingLabel)
                     }
-                    .shadow(color: .black.opacity(0.1), radius: 14, x: 0, y: 4)
             }
             .buttonStyle(.plain)
-            .disabled(!vm.isEditing)
+            .allowsHitTesting(vm.isEditing)
 
-            if vm.isEditing, let editVM = vm.editVM {
-                @Bindable var editVM = editVM
-                HStack(alignment: .center, spacing: BaseTheme.Spacing.sm) {
-                    TextField(vm.mode?.name ?? "Nombre del modo", text: $editVM.name)
-                        .font(Typography.title())
-                        .foregroundStyle(Color(.label))
-                        .multilineTextAlignment(.leading)
-                        .autocorrectionDisabled()
-                        .padding(.horizontal, BaseTheme.Spacing.lg)
-                        .padding(.vertical, BaseTheme.Spacing.md)
-                        .background(Color.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+            HStack {
+                Spacer()
+                TextField(
+                    vm.mode?.name ?? "Nombre del modo",
+                    text: Binding(
+                        get: { vm.editVM?.name ?? vm.mode?.name ?? "" },
+                        set: { vm.editVM?.name = $0 }
+                    )
+                )
+                .font(Typography.title())
+                .foregroundStyle(Color(.label))
+                .multilineTextAlignment(.center)
+                .autocorrectionDisabled()
+                .fixedSize()
+                .padding(.vertical, BaseTheme.Spacing.sm)
+                .padding(.horizontal, BaseTheme.Spacing.md)
+                .frame(minWidth: 120)
+                .background(vm.isEditing ? Color.cardBackground : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: BaseTheme.Radius.card))
+                .tappable()
+                .disabled(!vm.isEditing)
+                Spacer()
+            }
 
-                    Button { editVM.showColorPicker = true } label: {
-                        Circle()
-                            .fill(Color(hex: editVM.colorHex))
-                            .frame(width: 30, height: 30)
-                            .overlay {
-                                Circle()
-                                    .stroke(Color(.separator).opacity(0.25), lineWidth: 1)
-                            }
+            if !vm.isEditing, !vm.isNew {
+                if vm.isModeActive {
+                    Text("This mode is active right now")
+                        .font(Typography.caption(weight: .semibold))
+                        .foregroundStyle(Color(.secondaryLabel))
+                } else {
+                    PrimaryButton(action: vm.handlePlay) {
+                        HStack(spacing: BaseTheme.Spacing.sm) {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("Start mode")
+                                .font(Typography.body(weight: .semibold))
+                        }
                     }
-                    .buttonStyle(.plain)
+                    .padding(.top, BaseTheme.Spacing.sm)
                 }
-            } else {
-                Text(vm.mode?.name ?? "")
-                    .font(Typography.title())
-                    .foregroundStyle(Color(.label))
             }
         }
         .frame(maxWidth: .infinity)
@@ -229,9 +166,8 @@ struct ModeDetailView: View {
     @ViewBuilder
     private var restrictionsSection: some View {
         let hasApps = !displayedBlockedApps.isEmpty
-        let hasCategories = !displayedBlockedCategories.isEmpty
 
-        if vm.isEditing || hasApps || hasCategories {
+        if vm.isEditing || hasApps  {
             VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
                 HStack {
                     Text("Restrictions")
@@ -253,14 +189,7 @@ struct ModeDetailView: View {
                     )
                     .padding(.horizontal, BaseTheme.Spacing.lg)
                 }
-                if hasCategories {
-                    BlockedCategoryGrid(
-                        categories: displayedBlockedCategories,
-                        onAdd: nil
-                    )
-                    .padding(.horizontal, BaseTheme.Spacing.lg)
-                }
-                if vm.isEditing && !hasApps && !hasCategories {
+                if vm.isEditing && !hasApps {
                     StatCard(
                         pretitle: "Restrictions",
                         badge: { EmptyView() },
@@ -333,6 +262,42 @@ struct ModeDetailView: View {
             return selection.categoryTokens.map(BlockedCategory.init(token:))
         }
         return vm.blockedCategories
+    }
+}
+
+extension ModeDetailView {
+    @ViewBuilder
+    private func detailPromptSheet(prompt: ModeActivationPrompt) -> some View {
+        VStack(spacing: BaseTheme.Spacing.lg) {
+            RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
+                .fill(Color.cardBackground)
+                .frame(width: 72, height: 72)
+                .overlay {
+                    Image(systemName: prompt.icon)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(Color(.label))
+                }
+
+            VStack(spacing: BaseTheme.Spacing.xs) {
+                Text(prompt.title)
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+
+                Text(prompt.message)
+                    .font(Typography.body())
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .multilineTextAlignment(.center)
+            }
+
+            if vm.isModeActive {
+                DestructiveButton(action: vm.finishMode) {
+                    Text("Finish mode")
+                        .font(Typography.body(weight: .semibold))
+                }
+            }
+        }
+        .padding(.horizontal, BaseTheme.Spacing.xl)
+        .padding(.vertical, BaseTheme.Spacing.xl)
     }
 }
 

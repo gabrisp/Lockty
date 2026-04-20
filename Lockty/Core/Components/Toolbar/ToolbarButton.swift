@@ -7,24 +7,30 @@ import SwiftUI
 
 struct ToolbarButton: View {
     let icon: String
-    var size: CGFloat = 50
-    var iconSize: CGFloat = 16
+    var size: CGFloat
+    var iconSize: CGFloat
     let action: () -> Void
 
+    init(icon: String, size: CGFloat  = 32 , iconSize: CGFloat  = 16 , action: @escaping () -> Void = {print("no action")}) {
+        self.icon = icon
+        self.size = size
+        self.iconSize = iconSize
+        self.action = action
+    }
     var body: some View {
-        Circle()
-            .foregroundStyle(.clear)
-            .frame(width: size, height: size)
-            .glassEffect(.regular.interactive(), in: .circle)
-            .overlay {
+        
+           
+            Button {
+             action()
+            } label: {
                 Image(systemName: icon)
-                    .font(.system(size: iconSize, weight: .semibold))
+                   // .font(.system(size: iconSize, weight: .semibold))
                     .foregroundStyle(Color(.label))
                     .frame(width: size, height: size)
             }
-            .zIndex(1000)
-            .transition(.blurReplace)
-            .tappable()
-            .onTapGesture { action() }
+        .buttonBorderShape(.circle)
+        .buttonStyle(.glass)
+        .transition(.blurReplace)
+        .tappable()
     }
 }
