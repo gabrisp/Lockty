@@ -146,7 +146,7 @@ struct ModeDetailView: View {
                 } else {
                     PrimaryButton(action: vm.handlePlay) {
                         HStack(spacing: BaseTheme.Spacing.sm) {
-                            Image(systemName: "play.fill")
+                 f           Image(systemName: "play.fill")
                                 .font(.system(size: 13, weight: .bold))
                             Text("Start mode")
                                 .font(Typography.body(weight: .semibold))
