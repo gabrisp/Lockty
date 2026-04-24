@@ -6,45 +6,38 @@
 //
 
 import SwiftUI
-import VariableBlur
 import FamilyControls
 
 struct ModeDetailView: View {
     @Environment(AppRouter.self) private var router
     @State private var vm: ModeDetailViewModel
-    @State private var dragOffset: CGFloat = 0
 
     init(mode: Mode? = nil) {
         _vm = State(initialValue: ModeDetailViewModel(mode: mode))
     }
 
     var body: some View {
-            ScrollView(.vertical) {
-                VStack(spacing: BaseTheme.Spacing.lg) {
-
-                    // MARK: Hero — icono + nombre (editable en modo edición)
-                    hero
-                        .padding(.horizontal, BaseTheme.Spacing.lg)
-
-                    // MARK: Contenido
-                        restrictionsSection
-                        rulesSection
-                
-                
-                }
-                .padding(.top, 54 + BaseTheme.Spacing.md)
-                .padding(.bottom, 100)
+        ScrollView(.vertical) {
+            VStack(spacing: BaseTheme.Spacing.lg) {
+                hero
+                    .padding(.horizontal, BaseTheme.Spacing.lg)
+                restrictionsSection
+                rulesSection
             }
-            .scrollIndicators(.hidden)
-            .background(Color.pageBackground.ignoresSafeArea())
-            .overlay(alignment: .topLeading, content: {
-                CustomToolbar(title: vm.mode?.name ?? "Mode") {
-                    router.navigation.pop()
-                }
-            })
-        .onAppear {
-            vm.refreshModeState()
+            .padding(.top, 44 + BaseTheme.Spacing.md)
+            .padding(.bottom, 100)
         }
+        .scrollIndicators(.hidden)
+        .background(Color.pageBackground.ignoresSafeArea())
+        .safeAreaBar(edge: .top, content: {
+            ModeDetailToolbar {
+                router.navigation.pop()
+            }
+        })
+        .scrollEdgeEffectStyle(.soft, for: .all)
+        .onAppear { vm.refreshModeState() }
+        .navigationBarBackButtonHidden(true)
+        .enableInteractivePopGesture()
         .alert("Eliminar modo", isPresented: $vm.showDeleteAlert) {
             Button("Eliminar", role: .destructive) {
                 vm.deleteMode()
@@ -54,53 +47,18 @@ struct ModeDetailView: View {
         } message: {
             Text("Esta acción no se puede deshacer.")
         }
-        .sheet(item: $vm.activationPrompt) { prompt in
-            DynamicSheet {
-                detailPromptSheet(prompt: prompt)
-            }
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.editVM?.showIconPicker ?? false },
-            set: { vm.editVM?.showIconPicker = $0 }
-        )) {
-            if let editVM = vm.editVM {
-                DynamicSheet { IconColorPickerSheet(vm: editVM) }
-                    .presentationDragIndicator(.hidden)
-            }
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.editVM?.showCreateRule ?? false },
-            set: { vm.editVM?.showCreateRule = $0 }
-        )) {
-            if let editVM = vm.editVM {
-                DynamicSheet {
-                    CreateRuleSheet(
-                        modeVM: editVM,
-                        preselectedTransition: editVM.preselectedTransition
-                    )
-                }
-                .onDisappear { vm.editVM?.preselectedTransition = nil }
-            }
-        }
-        .sheet(isPresented: Binding(
-            get: { vm.editVM?.showScreenTimePicker ?? false },
-            set: { vm.editVM?.showScreenTimePicker = $0 }
-        )) {
-            if let editVM = vm.editVM {
-                ScreenTimePickerSheet(vm: editVM)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-        }
+        .withModeSheets(vm: vm)
     }
+}
 
-    // MARK: - Hero
+// MARK: - Hero
 
-    private var hero: some View {
+private extension ModeDetailView {
+    var hero: some View {
         VStack(spacing: BaseTheme.Spacing.md) {
             Button {
                 guard vm.isEditing else { return }
-                vm.editVM?.showIconPicker = true
+                vm.editVM?.showIconColorPicker = true
             } label: {
                 RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
                     .fill(Color(hex: vm.editVM?.colorHex ?? vm.mode?.colorHex ?? "#FCE8E3"))
@@ -146,7 +104,7 @@ struct ModeDetailView: View {
                 } else {
                     PrimaryButton(action: vm.handlePlay) {
                         HStack(spacing: BaseTheme.Spacing.sm) {
-                 f           Image(systemName: "play.fill")
+                            Image(systemName: "play.fill")
                                 .font(.system(size: 13, weight: .bold))
                             Text("Start mode")
                                 .font(Typography.body(weight: .semibold))
@@ -160,14 +118,16 @@ struct ModeDetailView: View {
         .padding(.bottom, BaseTheme.Spacing.sm)
         .animation(.smooth(duration: 0.5), value: vm.isEditing)
     }
+}
 
-    // MARK: - Restrictions
+// MARK: - Restrictions
 
+private extension ModeDetailView {
     @ViewBuilder
-    private var restrictionsSection: some View {
+    var restrictionsSection: some View {
         let hasApps = !displayedBlockedApps.isEmpty
 
-        if vm.isEditing || hasApps  {
+        if vm.isEditing || hasApps {
             VStack(alignment: .leading, spacing: BaseTheme.Spacing.sm) {
                 HStack {
                     Text("Restrictions")
@@ -175,19 +135,23 @@ struct ModeDetailView: View {
                         .foregroundStyle(Color(.label))
                     Spacer()
                     if vm.isEditing {
-                        ToolbarButton(icon: "plus") {
+                        Button {
                             vm.editVM?.showScreenTimePicker = true
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Color(.label))
+                                .frame(width: 32, height: 32)
                         }
+                        .buttonBorderShape(.circle)
+                        .buttonStyle(.glass)
                     }
                 }
                 .padding(.horizontal, BaseTheme.Spacing.lg)
 
                 if hasApps {
-                    BlockedAppGrid(
-                        apps: displayedBlockedApps,
-                        onAdd: nil
-                    )
-                    .padding(.horizontal, BaseTheme.Spacing.lg)
+                    BlockedAppGrid(apps: displayedBlockedApps, onAdd: nil)
+                        .padding(.horizontal, BaseTheme.Spacing.lg)
                 }
                 if vm.isEditing && !hasApps {
                     StatCard(
@@ -205,10 +169,26 @@ struct ModeDetailView: View {
         }
     }
 
-    // MARK: - Rules
+    var displayedBlockedApps: [BlockedApp] {
+        if vm.isEditing, let selection = vm.editVM?.blockedApps {
+            return selection.applicationTokens.map(BlockedApp.init(token:))
+        }
+        return vm.blockedApps
+    }
 
+    var displayedBlockedCategories: [BlockedCategory] {
+        if vm.isEditing, let selection = vm.editVM?.blockedApps {
+            return selection.categoryTokens.map(BlockedCategory.init(token:))
+        }
+        return vm.blockedCategories
+    }
+}
+
+// MARK: - Rules
+
+private extension ModeDetailView {
     @ViewBuilder
-    private var rulesSection: some View {
+    var rulesSection: some View {
         let hasRules = !vm.ruleGroups.isEmpty
 
         if vm.isEditing || hasRules {
@@ -237,8 +217,8 @@ struct ModeDetailView: View {
             }
         }
     }
-    
-    private var editRuleGroups: [RuleGroup] {
+
+    var editRuleGroups: [RuleGroup] {
         let rules = vm.editVM?.rules ?? []
         return Transition.allCases.map { transition in
             RuleGroup(
@@ -249,25 +229,13 @@ struct ModeDetailView: View {
             )
         }
     }
-
-    private var displayedBlockedApps: [BlockedApp] {
-        if vm.isEditing, let selection = vm.editVM?.blockedApps {
-            return selection.applicationTokens.map(BlockedApp.init(token:))
-        }
-        return vm.blockedApps
-    }
-
-    private var displayedBlockedCategories: [BlockedCategory] {
-        if vm.isEditing, let selection = vm.editVM?.blockedApps {
-            return selection.categoryTokens.map(BlockedCategory.init(token:))
-        }
-        return vm.blockedCategories
-    }
 }
 
-extension ModeDetailView {
+// MARK: - Activation Prompt Sheet
+
+private extension ModeDetailView {
     @ViewBuilder
-    private func detailPromptSheet(prompt: ModeActivationPrompt) -> some View {
+    func detailPromptSheet(prompt: ModeActivationPrompt) -> some View {
         VStack(spacing: BaseTheme.Spacing.lg) {
             RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
                 .fill(Color.cardBackground)
@@ -301,7 +269,88 @@ extension ModeDetailView {
     }
 }
 
-// MARK: - Color helper
+// MARK: - Sheets Modifier
+
+private struct ModeSheetsModifier: ViewModifier {
+    let vm: ModeDetailViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: Binding(get: { vm.activationPrompt }, set: { vm.activationPrompt = $0 })) { prompt in
+                DynamicSheet {
+                    ModeSheetsModifier.promptSheet(prompt: prompt, vm: vm)
+                }
+            }
+            .sheet(isPresented: Binding(
+                get: { vm.editVM?.showIconColorPicker ?? false },
+                set: { vm.editVM?.showIconColorPicker = $0 }
+            )) {
+                if let editVM = vm.editVM {
+                    DynamicSheet { IconColorPickerSheet(vm: editVM) }
+                        .presentationDragIndicator(.hidden)
+                }
+            }
+            .sheet(isPresented: Binding(
+                get: { vm.editVM?.showCreateRule ?? false },
+                set: { vm.editVM?.showCreateRule = $0 }
+            )) {
+                if let editVM = vm.editVM {
+                    DynamicSheet {
+                        CreateRuleView(
+                            modeVM: editVM,
+                            preselectedTransition: editVM.preselectedTransition
+                        )
+                    }
+                    .onDisappear { vm.editVM?.preselectedTransition = nil }
+                }
+            }
+            .sheet(isPresented: Binding(
+                get: { vm.editVM?.showScreenTimePicker ?? false },
+                set: { vm.editVM?.showScreenTimePicker = $0 }
+            )) {
+                if let editVM = vm.editVM {
+                    ScreenTimePickerView(vm: editVM)
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.visible)
+                }
+            }
+    }
+
+    static func promptSheet(prompt: ModeActivationPrompt, vm: ModeDetailViewModel) -> some View {
+        VStack(spacing: BaseTheme.Spacing.lg) {
+            RoundedRectangle(cornerRadius: BaseTheme.Radius.card)
+                .fill(Color.cardBackground)
+                .frame(width: 72, height: 72)
+                .overlay {
+                    Image(systemName: prompt.icon)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(Color(.label))
+                }
+            VStack(spacing: BaseTheme.Spacing.xs) {
+                Text(prompt.title)
+                    .font(Typography.title())
+                    .foregroundStyle(Color(.label))
+                Text(prompt.message)
+                    .font(Typography.body())
+                    .foregroundStyle(Color(.secondaryLabel))
+                    .multilineTextAlignment(.center)
+            }
+            if vm.isModeActive {
+                DestructiveButton(action: vm.finishMode) {
+                    Text("Finish mode").font(Typography.body(weight: .semibold))
+                }
+            }
+        }
+        .padding(.horizontal, BaseTheme.Spacing.xl)
+        .padding(.vertical, BaseTheme.Spacing.xl)
+    }
+}
+
+private extension View {
+    func withModeSheets(vm: ModeDetailViewModel) -> some View {
+        modifier(ModeSheetsModifier(vm: vm))
+    }
+}
 
 // MARK: - Preview
 
@@ -310,5 +359,5 @@ extension ModeDetailView {
         id: UUID(), name: "Gym", iconName: "figure.run",
         colorHex: "#E8F5E9", state: ModeState.inactive.rawValue, createdAt: .now
     ))
-    .environment(AppRouter())
+    .environment(AppRouter.shared)
 }

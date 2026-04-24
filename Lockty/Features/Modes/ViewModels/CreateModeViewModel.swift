@@ -18,9 +18,10 @@ final class CreateModeViewModel {
     var nfcTags: [NFCTag] = []
     var locationZones: [LocationZone] = []
     var blockedApps: FamilyActivitySelection = .init()
+    var linkedAppGroupID: UUID? = nil
 
     // Sub-sheet visibility
-    var showIconPicker: Bool = false
+    var showIconColorPicker: Bool = false
     var showScreenTimePicker: Bool = false
     var showCreateRule: Bool = false
     var preselectedTransition: Transition? = nil
@@ -52,10 +53,18 @@ final class CreateModeViewModel {
             let blockedReq = BlockedAppsEntity.fetchRequest()
             blockedReq.predicate = NSPredicate(format: "modeId == %@", modeId as CVarArg)
             blockedReq.fetchLimit = 1
-            if let blockedEntity = try? ctx.fetch(blockedReq).first,
-               let data = blockedEntity.selectionData,
-               let decoded = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
-                blockedApps = decoded
+            if let blockedEntity = try? ctx.fetch(blockedReq).first {
+                linkedAppGroupID = blockedEntity.appGroupId
+
+                if let appGroupID = blockedEntity.appGroupId,
+                   let group = AppGroupStore.shared.fetch(id: appGroupID) {
+                    blockedApps = group.selection
+                } else if let data = blockedEntity.selectionData,
+                          let decoded = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    blockedApps = decoded
+                } else {
+                    linkedAppGroupID = nil
+                }
             }
         }
 
@@ -146,6 +155,7 @@ final class CreateModeViewModel {
         blockedReq.fetchLimit = 1
         let blockedEntity = (try? ctx.fetch(blockedReq).first) ?? BlockedAppsEntity(context: ctx)
         blockedEntity.modeId = id
+        blockedEntity.appGroupId = linkedAppGroupID
         blockedEntity.selectionData = try? JSONEncoder().encode(blockedApps)
 
         let existingNFCTagReq = NFCTagEntity.fetchRequest()
@@ -199,5 +209,14 @@ final class CreateModeViewModel {
         }
 
         try ctx.save()
+    }
+
+    func applyAppGroup(_ group: AppGroup) {
+        linkedAppGroupID = group.id
+        blockedApps = group.selection
+    }
+
+    func unlinkAppGroup() {
+        linkedAppGroupID = nil
     }
 }

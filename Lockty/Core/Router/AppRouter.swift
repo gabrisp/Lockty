@@ -10,6 +10,8 @@ import SwiftUI
 @Observable
 final class AppRouter {
 
+    static let shared = AppRouter()
+
     // MARK: - Auth
     var authState: AuthState = .loading
     var currentUser: LocalUser? = nil

@@ -120,8 +120,12 @@ final class OnboardingViewModel {
                    existing.firebaseUserId != uid {
                     for entity in (try? ctx.fetch(LocalUserEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
                     for entity in (try? ctx.fetch(ModeEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
+                    for entity in (try? ctx.fetch(BlockedAppsEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
+                    for entity in (try? ctx.fetch(AppGroupEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
                     for entity in (try? ctx.fetch(SessionEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
                     for entity in (try? ctx.fetch(RuleEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
+                    for entity in (try? ctx.fetch(NFCTagEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
+                    for entity in (try? ctx.fetch(LocationZoneEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
                     for entity in (try? ctx.fetch(SyncSettingsEntity.fetchRequest())) ?? [] { ctx.delete(entity) }
                     try ctx.save()
                 }
